@@ -1,4 +1,4 @@
--- Creación de la tabla Clientes
+-- Creación de la tabla Clientes Relacionada con la tabla Suscripciones
 CREATE TABLE Clientes
 (
     id_cliente       INT PRIMARY KEY AUTO_INCREMENT,
@@ -23,7 +23,7 @@ CREATE TABLE Suscripciones
     FOREIGN KEY (id_cliente) REFERENCES Clientes (id_cliente)
 );
 
--- Creación de la tabla Clases
+-- Creación de la tabla Clases Relacionada con la tabla Entrenadores
 CREATE TABLE Clases
 (
     id_clase         INT PRIMARY KEY AUTO_INCREMENT,
@@ -32,18 +32,6 @@ CREATE TABLE Clases
     capacidad_maxima INT,
     duracion         TIME,
     instructor       VARCHAR(50)
-);
-
--- Creación de la tabla InscripcionesClases
-CREATE TABLE InscripcionesClases
-(
-    id_inscripcion    INT PRIMARY KEY AUTO_INCREMENT,
-    id_cliente        INT,
-    id_clase          INT,
-    fecha_inscripcion DATE,
-    asistio           BOOLEAN,
-    FOREIGN KEY (id_cliente) REFERENCES Clientes (id_cliente),
-    FOREIGN KEY (id_clase) REFERENCES Clases (id_clase)
 );
 
 -- Creación de la tabla Entrenadores
@@ -57,7 +45,13 @@ CREATE TABLE Entrenadores
     salario            DECIMAL(10, 2)
 );
 
--- Creación de la tabla Equipamiento
+-- Añadimos la columna id_entrenador a la tabla Clases para poder relacionarla con la tabla Entrenadores
+ALTER TABLE Clases
+    ADD id_entrenador INT,
+    ADD FOREIGN KEY (id_entrenador) REFERENCES Entrenadores (id_entrenador);
+
+
+-- Creación de la tabla Equipamiento Relacionada con la tabla Mantenimientos
 CREATE TABLE Equipamiento
 (
     id_equipamiento INT PRIMARY KEY AUTO_INCREMENT,
@@ -68,7 +62,7 @@ CREATE TABLE Equipamiento
     estado          VARCHAR(50)
 );
 
--- Creación de la tabla Mantenimientos
+-- Creación de la tabla Mantenimientos Relacionada con la tabla Equipamiento
 CREATE TABLE Mantenimientos
 (
     id_mantenimiento    INT PRIMARY KEY AUTO_INCREMENT,
@@ -78,3 +72,5 @@ CREATE TABLE Mantenimientos
     costo               DECIMAL(10, 2),
     FOREIGN KEY (id_equipamiento) REFERENCES Equipamiento (id_equipamiento)
 );
+
+

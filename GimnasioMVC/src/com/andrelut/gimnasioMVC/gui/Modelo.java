@@ -21,7 +21,7 @@ public class Modelo {
     public void conectar() {
         try (Connection conn = DriverManager.getConnection("jdbc:mysql://" + ip + ":3306/", user, password)) {
             // Revisa si la base de datos 'GimnasioDB' ya existe.
-            if (!baseDeDatosExiste(conn, "GimnasioDB")) {
+            if (baseDeDatosExiste(conn, "GimnasioDB")) {
                 // Si no existe, crea la base de datos y configura su estructura.
                 try (Statement stmt = conn.createStatement()) {
                     stmt.executeUpdate("CREATE DATABASE GimnasioDB");
