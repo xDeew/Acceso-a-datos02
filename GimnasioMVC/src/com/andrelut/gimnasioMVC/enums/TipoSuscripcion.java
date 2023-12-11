@@ -1,18 +1,24 @@
 package com.andrelut.gimnasioMVC.enums;
 
 public enum TipoSuscripcion {
-    BASICA("Básica"),
-    PREMIUM("Premium"),
-    FAMILIAR("Familiar"),
-    ESTUDIANTE("Estudiante");
+    BASICA("Básica", 20.00),
+    PREMIUM("Premium", 35.00),
+    FAMILIAR("Familiar", 50.00),
+    ESTUDIANTE("Estudiante", 15.00);
 
-    private String valor;
+    private String nombre;
+    private double precio;
 
-    TipoSuscripcion(String valor) {
-        this.valor = valor;
+    TipoSuscripcion(String nombre, double precio) {
+        this.nombre = nombre;
+        this.precio = precio;
     }
 
-    public String getValor() {
-        return valor;
+    public String getNombre() {
+        return nombre;
+    }
+
+    public double getPrecio() {
+        return precio;
     }
 }
