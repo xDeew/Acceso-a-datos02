@@ -21,4 +21,5 @@ public enum TipoSuscripcion {
     public double getPrecio() {
         return precio;
     }
+
 }

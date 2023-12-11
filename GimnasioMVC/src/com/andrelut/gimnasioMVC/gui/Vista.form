@@ -4,7 +4,7 @@
     <rowspec value="center:d:noGrow"/>
     <colspec value="fill:592px:noGrow"/>
     <constraints>
-      <xy x="20" y="19" width="593" height="441"/>
+      <xy x="20" y="19" width="762" height="486"/>
     </constraints>
     <properties/>
     <border type="none"/>
@@ -21,6 +21,14 @@
         <children>
           <grid id="985a0" binding="JPanelClientes" layout-manager="FormLayout">
             <rowspec value="center:30px:noGrow"/>
+            <rowspec value="top:4dlu:noGrow"/>
+            <rowspec value="center:max(d;4px):noGrow"/>
+            <rowspec value="top:4dlu:noGrow"/>
+            <rowspec value="center:max(d;4px):noGrow"/>
+            <rowspec value="top:4dlu:noGrow"/>
+            <rowspec value="center:max(d;4px):noGrow"/>
+            <rowspec value="top:4dlu:noGrow"/>
+            <rowspec value="center:max(d;4px):noGrow"/>
             <rowspec value="top:4dlu:noGrow"/>
             <rowspec value="center:max(d;4px):noGrow"/>
             <rowspec value="top:4dlu:noGrow"/>
@@ -110,7 +118,7 @@
               </component>
               <component id="4eb01" class="javax.swing.JLabel">
                 <constraints>
-                  <grid row="8" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="10" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                   <forms/>
                 </constraints>
                 <properties>
@@ -118,6 +126,51 @@
                 </properties>
               </component>
               <component id="2b361" class="javax.swing.JTextField" binding="txtDireccion">
+                <constraints>
+                  <grid row="10" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+                    <preferred-size width="150" height="-1"/>
+                  </grid>
+                  <forms defaultalign-horz="false"/>
+                </constraints>
+                <properties/>
+              </component>
+              <component id="8d741" class="javax.swing.JButton" binding="btnAddCliente">
+                <constraints>
+                  <grid row="12" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                  <forms/>
+                </constraints>
+                <properties>
+                  <text value="Añadir"/>
+                </properties>
+              </component>
+              <component id="958e6" class="javax.swing.JButton" binding="btnModificarCliente">
+                <constraints>
+                  <grid row="14" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                  <forms/>
+                </constraints>
+                <properties>
+                  <text value="Modificar"/>
+                </properties>
+              </component>
+              <component id="fc40a" class="javax.swing.JButton" binding="btnEliminarCliente">
+                <constraints>
+                  <grid row="16" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                  <forms/>
+                </constraints>
+                <properties>
+                  <text value="Eliminar"/>
+                </properties>
+              </component>
+              <component id="f949d" class="javax.swing.JLabel">
+                <constraints>
+                  <grid row="8" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <forms/>
+                </constraints>
+                <properties>
+                  <text value="Teléfono"/>
+                </properties>
+              </component>
+              <component id="c2bcb" class="javax.swing.JTextField" binding="txtTelefono">
                 <constraints>
                   <grid row="8" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
                     <preferred-size width="150" height="-1"/>
@@ -206,7 +259,7 @@
                   <text value="Tipo"/>
                 </properties>
               </component>
-              <component id="9482e" class="javax.swing.JComboBox" binding="comboEstadoPago">
+              <component id="9482e" class="javax.swing.JComboBox" binding="comboTipoSuscripcion">
                 <constraints>
                   <grid row="6" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
                   <forms/>

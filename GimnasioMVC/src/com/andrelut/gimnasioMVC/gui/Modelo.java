@@ -1,9 +1,12 @@
 package com.andrelut.gimnasioMVC.gui;
 
+import com.andrelut.gimnasioMVC.enums.TipoSuscripcion;
+
 import java.io.*;
 import java.sql.*;
+import java.sql.Date;
 import java.time.LocalDate;
-import java.util.Properties;
+import java.util.*;
 
 public class Modelo {
     private String ip;
@@ -20,25 +23,21 @@ public class Modelo {
 
     public void conectar() {
         try (Connection conn = DriverManager.getConnection("jdbc:mysql://" + ip + ":3306/", user, password)) {
-            // Revisa si la base de datos 'GimnasioDB' ya existe.
-            if (baseDeDatosExiste(conn, "GimnasioDB")) {
-                // Si no existe, crea la base de datos y configura su estructura.
+            if (!baseDeDatosExiste(conn, "gimnasiodb")) {
+                // La base de datos no existe, por lo que se crea.
                 try (Statement stmt = conn.createStatement()) {
                     stmt.executeUpdate("CREATE DATABASE GimnasioDB");
                     System.out.println("Base de datos 'GimnasioDB' creada automáticamente.");
                 } catch (SQLException e) {
-                    if (e.getMessage().contains("database exists")) {
-                        System.out.println("La base de datos 'GimnasioDB' ya existe. Continuando con la ejecución del programa.");
-                    } else {
-                        e.printStackTrace();
-                    }
+                    e.printStackTrace();
+                    return;
                 }
-                // Conectar a la base de datos recién creada para configurar su estructura.
-                try (Connection connGimnasio = DriverManager.getConnection("jdbc:mysql://" + ip + ":3306/GimnasioDB", user, password)) {
-                    ejecutarScriptSQL(connGimnasio, "bdgimnasio.sql");
-                }
+                // Ejecutar el script de inicialización de la base de datos aquí.
+            } else {
+                System.out.println("La base de datos 'GimnasioDB' ya existe. Continuando con la ejecución del programa.");
             }
 
+            // Conectar a la base de datos.
             conexion = DriverManager.getConnection("jdbc:mysql://" + ip + ":3306/GimnasioDB", user, password);
             System.out.println("Conectado a la base de datos 'GimnasioDB'.");
         } catch (SQLException e) {
@@ -46,11 +45,10 @@ public class Modelo {
             e.printStackTrace();
         }
     }
-
     private boolean baseDeDatosExiste(Connection conn, String dbName) {
         try (ResultSet resultSet = conn.getMetaData().getCatalogs()) {
             while (resultSet.next()) {
-                if (dbName.equals(resultSet.getString(1))) {
+                if (dbName.toLowerCase().equals(resultSet.getString(1).toLowerCase())) {
                     return true;
                 }
             }
@@ -108,15 +106,6 @@ public class Modelo {
             e.printStackTrace();
         }
     }
-
-    // Métodos para operar con la tabla Clientes
-    public void insertarCliente(String nombre, String apellido, LocalDate fechaNacimiento, String email, String telefono, String direccion) {
-        String sentenciaSql = "INSERT INTO Clientes (nombre, apellido, fecha_nacimiento, email, telefono, direccion) VALUES (?, ?, ?, ?, ?, ?)";
-        // Implementa el resto de la lógica para insertar un cliente
-    }
-
-    // Implementa métodos similares para actualizar y eliminar clientes
-    // ...
 
     private void getPropValues() {
         InputStream inputStream = null;
@@ -176,7 +165,99 @@ public class Modelo {
         }
     }
 
+    public List<String> obtenerNombresClientes() {
+        List<String> nombresClientes = new ArrayList<>();
+        String sentenciaSql = "SELECT nombre, apellido FROM Clientes";
 
-    // Puedes añadir más métodos para trabajar con otras tablas de tu base de datos
-    // ...
+        try (Statement stmt = conexion.createStatement();
+             ResultSet rs = stmt.executeQuery(sentenciaSql)) {
+
+            while (rs.next()) {
+                String nombreCompleto = rs.getString("nombre") + " " + rs.getString("apellido");
+                nombresClientes.add(nombreCompleto);
+            }
+        } catch (SQLException e) {
+            System.out.println("Error al obtener nombres de los clientes: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return nombresClientes;
+    }
+
+    // Métodos para operar con la tabla Clientes
+    public void insertarCliente(String nombre, String apellido, LocalDate fechaNacimiento, String email, String telefono, String direccion) {
+        String sentenciaSql = "INSERT INTO Clientes (nombre, apellido, fecha_nacimiento, email, telefono, direccion) VALUES (?, ?, ?, ?, ?, ?)";
+
+        try (PreparedStatement pstmt = conexion.prepareStatement(sentenciaSql)) {
+            pstmt.setString(1, nombre);
+            pstmt.setString(2, apellido);
+            pstmt.setDate(3, Date.valueOf(fechaNacimiento));
+            pstmt.setString(4, email);
+            pstmt.setString(5, telefono);
+            pstmt.setString(6, direccion);
+
+            int filasAfectadas = pstmt.executeUpdate();
+            if (filasAfectadas > 0) {
+                System.out.println("Cliente insertado con éxito.");
+            } else {
+                System.out.println("No se pudo insertar el cliente.");
+            }
+        } catch (SQLException e) {
+            System.out.println("Error al insertar el cliente: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    public Map<String, Object> obtenerDatosCliente(String nombreCompleto) {
+        String[] partes = nombreCompleto.split(" ");
+        String nombre = partes[0];
+        String apellido = partes.length > 1 ? partes[1] : ""; // Asumiendo que el nombre completo puede contener un apellido
+        String sentenciaSql = "SELECT * FROM Clientes WHERE nombre = ? AND apellido = ?";
+        Map<String, Object> datosCliente = new HashMap<>();
+
+        try (PreparedStatement pstmt = conexion.prepareStatement(sentenciaSql)) {
+            pstmt.setString(1, nombre);
+            pstmt.setString(2, apellido);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    datosCliente.put("nombre", rs.getString("nombre"));
+                    datosCliente.put("apellido", rs.getString("apellido"));
+                    datosCliente.put("email", rs.getString("email"));
+                    datosCliente.put("telefono", rs.getString("telefono"));
+                    datosCliente.put("fecha_nacimiento", rs.getDate("fecha_nacimiento").toLocalDate());
+                    datosCliente.put("direccion", rs.getString("direccion"));
+                    // Y así con los demás campos que necesites
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error al obtener datos del cliente: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return datosCliente;
+    }
+
+    public double obtenerPrecioPorTipoSuscripcion(String tipoSuscripcion) {
+        double precio = 0.0;
+        switch (tipoSuscripcion) {
+            case "Básica":
+                precio = TipoSuscripcion.BASICA.getPrecio();
+                break;
+            case "Premium":
+                precio = TipoSuscripcion.PREMIUM.getPrecio();
+                break;
+            case "Familiar":
+                precio = TipoSuscripcion.FAMILIAR.getPrecio();
+                break;
+            case "Estudiante":
+                precio = TipoSuscripcion.ESTUDIANTE.getPrecio();
+                break;
+            default:
+                break;
+        }
+        return precio;
+    }
+
+
 }

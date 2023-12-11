@@ -4,8 +4,12 @@ import com.andrelut.gimnasioMVC.enums.TipoSuscripcion;
 import com.github.lgooddatepicker.components.DatePicker;
 
 import javax.swing.*;
+import java.awt.*;
+import java.util.Date;
 
-public class Vista {
+public class Vista extends JFrame {
+    private static final String TITULOFRAME = "Gimnasio"; // Agrega el título que desees
+
     public JTabbedPane tabbedPane1;
     public JPanel panel1;
     public JPanel JPanelClientes;
@@ -22,45 +26,77 @@ public class Vista {
     public JComboBox comboClientesRegistrados;
     public DatePicker fechaInicio;
     public DatePicker fechaFin;
-    public JComboBox comboEstadoPago;
     public JComboBox comboPagado;
     public JFrame frame;
-    private JComboBox<TipoSuscripcion> comboTipoSuscripcion;
-    private JTextField txtPrecio;
+    public JComboBox comboTipoSuscripcion;
+    public JTextField txtPrecio;
+    public JButton btnAddCliente;
+    public JButton btnModificarCliente;
+    public JButton btnEliminarCliente;
+    public JTextField txtTelefono;
+    JMenuItem itemOpciones;
+    JMenuItem itemDesconectar;
+    JMenuItem itemSalir;
 
     public Vista() {
-        frame = new JFrame("Vista");
-        frame.setContentPane(panel1);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.pack();
-        frame.setVisible(true);
+        super(TITULOFRAME);
+        initFrame();
     }
 
-    private void inicializarComponentesSuscripcion() {
-        // Inicialización del JComboBox para los tipos de suscripción
-        comboTipoSuscripcion = new JComboBox<>();
+    public void initFrame() {
+        this.setContentPane(panel1);
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        this.pack();
+        this.setVisible(true);
+        this.setSize(new Dimension(this.getWidth() + 200, this.getHeight() + 50));
+        this.setLocationRelativeTo(null);
+        this.setLayout(new BorderLayout());
+        this.add(tabbedPane1, BorderLayout.CENTER);
+
+
+        setMenu();
+        setComboBox();
+        setTableModels();
+        setAdminDialog();
+    }
+
+    private void setMenu() {
+        JMenuBar mbBar = new JMenuBar();
+        JMenu menu = new JMenu("Archivo");
+        itemOpciones = new JMenuItem("Opciones");
+        itemOpciones.setActionCommand("Opciones");
+        itemDesconectar = new JMenuItem("Desconectar");
+        itemDesconectar.setActionCommand("Desconectar");
+        itemSalir = new JMenuItem("Salir");
+        itemSalir.setActionCommand("Salir");
+        menu.add(itemOpciones);
+        menu.add(itemDesconectar);
+        menu.add(itemSalir);
+        mbBar.add(menu);
+        mbBar.add(Box.createHorizontalGlue());
+        this.setJMenuBar(mbBar);
+    }
+
+    private void setTableModels() {
+
+    }
+
+    private void setComboBox() {
         for (TipoSuscripcion tipo : TipoSuscripcion.values()) {
-            comboTipoSuscripcion.addItem(tipo);
+            comboTipoSuscripcion.addItem(tipo.getNombre());
         }
+        comboTipoSuscripcion.setSelectedIndex(-1);
 
-        // Inicialización del JTextField para el precio
-        txtPrecio = new JTextField();
-        txtPrecio.setEditable(false); // El precio no se edita manualmente
-
-        // Añadir un ActionListener al JComboBox
-        comboTipoSuscripcion.addActionListener(e -> {
-            TipoSuscripcion tipoSeleccionado = (TipoSuscripcion) comboTipoSuscripcion.getSelectedItem();
-            if (tipoSeleccionado != null) {
-                txtPrecio.setText(String.format("%.2f", tipoSeleccionado.getPrecio()));
-            }
-        });
-
-        // Establece el precio inicial basado en la selección predeterminada del JComboBox
-        comboTipoSuscripcion.setSelectedIndex(0);
-
-        // ... (resto del método de inicialización)
     }
 
-    // ... (resto de la clase Vista)
-}
+    private void setAdminDialog() {
+    }
 
+    public JTextField getTxtEmail() {
+        return txtEmail;
+    }
+
+    public JTextField getTxtTelefono() {
+        return txtTelefono;
+    }
+}
