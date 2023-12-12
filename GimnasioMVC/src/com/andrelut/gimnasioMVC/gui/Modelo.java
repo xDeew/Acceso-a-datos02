@@ -3,8 +3,8 @@ package com.andrelut.gimnasioMVC.gui;
 import com.andrelut.gimnasioMVC.enums.TipoSuscripcion;
 
 import java.io.*;
-import java.sql.*;
 import java.sql.Date;
+import java.sql.*;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -24,7 +24,6 @@ public class Modelo {
     public void conectar() {
         try (Connection conn = DriverManager.getConnection("jdbc:mysql://" + ip + ":3306/", user, password)) {
             if (!baseDeDatosExiste(conn, "gimnasiodb")) {
-                // La base de datos no existe, por lo que se crea.
                 try (Statement stmt = conn.createStatement()) {
                     stmt.executeUpdate("CREATE DATABASE GimnasioDB");
                     System.out.println("Base de datos 'GimnasioDB' creada automáticamente.");
@@ -32,19 +31,24 @@ public class Modelo {
                     e.printStackTrace();
                     return;
                 }
-                // Ejecutar el script de inicialización de la base de datos aquí.
             } else {
                 System.out.println("La base de datos 'GimnasioDB' ya existe. Continuando con la ejecución del programa.");
             }
-
-            // Conectar a la base de datos.
+        } catch (SQLException e) {
+            System.out.println("Error al conectar con la base de datos: " + e.getMessage());
+            e.printStackTrace();
+        }
+        // volvemos a establecer conexion porque no se especifica la base de datos en la url, en esta nueva conexion si se especifica
+        try {
             conexion = DriverManager.getConnection("jdbc:mysql://" + ip + ":3306/GimnasioDB", user, password);
             System.out.println("Conectado a la base de datos 'GimnasioDB'.");
+            ejecutarScriptSQL(conexion, "bdgimnasio.sql");
         } catch (SQLException e) {
             System.out.println("Error al conectar con la base de datos: " + e.getMessage());
             e.printStackTrace();
         }
     }
+
     private boolean baseDeDatosExiste(Connection conn, String dbName) {
         try (ResultSet resultSet = conn.getMetaData().getCatalogs()) {
             while (resultSet.next()) {
