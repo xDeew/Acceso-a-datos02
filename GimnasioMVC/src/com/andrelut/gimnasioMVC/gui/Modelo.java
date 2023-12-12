@@ -13,6 +13,8 @@ public class Modelo {
     private String user;
     private String password;
     private String adminPassword;
+    private boolean esNuevaBaseDeDatos = false;
+
 
     private Connection conexion;
 
@@ -27,6 +29,8 @@ public class Modelo {
                 try (Statement stmt = conn.createStatement()) {
                     stmt.executeUpdate("CREATE DATABASE GimnasioDB");
                     System.out.println("Base de datos 'GimnasioDB' creada automáticamente.");
+                    esNuevaBaseDeDatos = true; // solo si es primera vez entrará y se define true
+
                 } catch (SQLException e) {
                     e.printStackTrace();
                     return;
@@ -40,19 +44,21 @@ public class Modelo {
         }
         // volvemos a establecer conexion porque no se especifica la base de datos en la url, en esta nueva conexion si se especifica
         try {
-            conexion = DriverManager.getConnection("jdbc:mysql://" + ip + ":3306/GimnasioDB", user, password);
+            conexion = DriverManager.getConnection("jdbc:mysql://" + ip + ":3306/gimnasiodb", user, password);
             System.out.println("Conectado a la base de datos 'GimnasioDB'.");
-            ejecutarScriptSQL(conexion, "bdgimnasio.sql");
+            if (esNuevaBaseDeDatos) { // si es nueva base de datos (true), se ejecuta el script sql para crear las tablas
+                ejecutarScriptSQL(conexion, "bdgimnasio.sql");
+            }
         } catch (SQLException e) {
             System.out.println("Error al conectar con la base de datos: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
-    private boolean baseDeDatosExiste(Connection conn, String dbName) {
+    private boolean baseDeDatosExiste(Connection conn, String nombreBD) {
         try (ResultSet resultSet = conn.getMetaData().getCatalogs()) {
             while (resultSet.next()) {
-                if (dbName.toLowerCase().equals(resultSet.getString(1).toLowerCase())) {
+                if (nombreBD.toLowerCase().equals(resultSet.getString(1).toLowerCase())) {
                     return true;
                 }
             }

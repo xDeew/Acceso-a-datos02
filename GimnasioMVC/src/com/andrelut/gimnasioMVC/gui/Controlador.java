@@ -29,7 +29,7 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
 
 
     private void iniciarControlador() {
-        DocumentListener emailValidator = new DocumentListener() {
+        DocumentListener validadorEmail = new DocumentListener() {
             public void changedUpdate(DocumentEvent e) {
                 validarEmail();
             }
@@ -42,9 +42,9 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
                 validarEmail();
             }
         };
-        vista.getTxtEmail().getDocument().addDocumentListener(emailValidator);
+        vista.getTxtEmail().getDocument().addDocumentListener(validadorEmail);
 
-        DocumentListener phoneValidator = new DocumentListener() {
+        DocumentListener validadorTelefono = new DocumentListener() {
             public void changedUpdate(DocumentEvent e) {
                 validarTelefono();
             }
@@ -57,7 +57,9 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
                 validarTelefono();
             }
         };
-        vista.getTxtTelefono().getDocument().addDocumentListener(phoneValidator);
+        vista.getTxtTelefono().getDocument().addDocumentListener(validadorTelefono);
+
+
     }
 
     private void validarTelefono() {
@@ -103,7 +105,6 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
         vista.btnEliminarCliente.addActionListener(this);
 
 
-
         // Configurando los ActionCommands para cada botón
         vista.btnAddCliente.setActionCommand("AñadirCliente");
         vista.btnModificarCliente.setActionCommand("ModificarCliente");
@@ -119,9 +120,10 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
         String command = e.getActionCommand();
         switch (command) {
             case "AñadirCliente":
-                if (hayCamposVacios()) JOptionPane.showMessageDialog(vista.frame, "Hay campos vacíos");
+                if (hayCamposVacios()) JOptionPane.showMessageDialog(vista.frame, "Hay campos vacíos", "Error", JOptionPane.ERROR_MESSAGE);
+
                 else if (!vista.getTxtEmail().getForeground().equals(new Color(0, 100, 0)) || !vista.getTxtTelefono().getForeground().equals(new Color(0, 100, 0))) {
-                    JOptionPane.showMessageDialog(vista.frame, "Email o teléfono incorrectos");
+                    JOptionPane.showMessageDialog(vista.frame, "Email o teléfono incorrectos", "Error", JOptionPane.ERROR_MESSAGE);
                 } else {
                     modelo.insertarCliente(vista.txtNombre.getText(), vista.txtApellido.getText(), vista.fechaNacimiento.getDate(), vista.txtEmail.getText(), vista.txtTelefono.getText(), vista.txtDireccion.getText());
                     JOptionPane.showMessageDialog(vista.frame, "Cliente añadido correctamente");
@@ -223,11 +225,6 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
                 LocalDate fechaInicio = LocalDate.now();
                 LocalDate fechaFin = fechaInicio.plusYears(1);
                 vista.fechaFin.setDate(fechaFin);
-
-                // deshabilita la edición de las fechas de inicio y fin
-                vista.fechaInicio.getComponentDateTextField().setEditable(false);
-                vista.fechaFin.getComponentDateTextField().setEditable(false);
-
 
             }
         }
