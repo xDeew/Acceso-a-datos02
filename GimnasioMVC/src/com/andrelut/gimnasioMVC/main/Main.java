@@ -8,13 +8,15 @@ import javax.swing.*;
 
 public class Main {
     public static void main(String[] args) {
+
         try {
             UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
+            Vista vista = new Vista();
+            Modelo modelo = new Modelo();
+            Controlador controlador = new Controlador(modelo, vista);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        Modelo modelo = new Modelo();
-        Vista vista = new Vista();
-        Controlador controlador = new Controlador(modelo, vista);
+
     }
 }

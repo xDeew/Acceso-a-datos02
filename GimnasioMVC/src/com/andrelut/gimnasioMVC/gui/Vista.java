@@ -1,11 +1,11 @@
 package com.andrelut.gimnasioMVC.gui;
 
+import com.andrelut.gimnasioMVC.enums.EstadoPago;
 import com.andrelut.gimnasioMVC.enums.TipoSuscripcion;
 import com.github.lgooddatepicker.components.DatePicker;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.Date;
 
 public class Vista extends JFrame {
     private static final String TITULOFRAME = "Gimnasio"; // Agrega el título que desees
@@ -87,6 +87,10 @@ public class Vista extends JFrame {
         }
         comboTipoSuscripcion.setSelectedIndex(-1);
 
+        for (EstadoPago estado : EstadoPago.values()) {
+            comboPagado.addItem(estado.getValor());
+        }
+        comboPagado.setSelectedIndex(-1);
     }
 
     private void setAdminDialog() {
