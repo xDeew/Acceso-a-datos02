@@ -221,7 +221,9 @@ public class Modelo {
     public Map<String, Object> obtenerDatosCliente(String nombreCompleto) {
         String[] partes = nombreCompleto.split(" ");
         String nombre = partes[0];
-        String apellido = partes.length > 1 ? partes[1] : ""; // Asumiendo que el nombre completo puede contener un apellido
+        String apellido;
+        if (partes.length > 1) apellido = partes[1];
+        else apellido = "";
         String sentenciaSql = "SELECT * FROM Clientes WHERE nombre = ? AND apellido = ?";
         Map<String, Object> datosCliente = new HashMap<>();
 
@@ -237,7 +239,6 @@ public class Modelo {
                     datosCliente.put("telefono", rs.getString("telefono"));
                     datosCliente.put("fecha_nacimiento", rs.getDate("fecha_nacimiento").toLocalDate());
                     datosCliente.put("direccion", rs.getString("direccion"));
-                    // Y así con los demás campos que necesites
                 }
             }
         } catch (SQLException e) {
