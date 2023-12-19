@@ -1,5 +1,7 @@
 package com.andrelut.gimnasioMVC.gui;
 
+import com.andrelut.gimnasioMVC.enums.EstadoPago;
+
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -15,16 +17,25 @@ import java.util.Map;
 public class Controlador implements ActionListener, ItemListener, ListSelectionListener, WindowListener {
     private final Modelo modelo;
     private final Vista vista;
+    private final LocalDate fechaHoy;
+
 
     public Controlador(Modelo modelo, Vista vista) {
         this.modelo = modelo;
         this.vista = vista;
+        fechaHoy = LocalDate.now();
         iniciarControlador();
         addActionListeners();
         addItemListeners();
         addWindowsListerners();
         actualizarListaClientes();
 
+    }
+
+    private void actualizarFechaInicioFin() {
+        vista.fechaInicio.setDate(fechaHoy);
+        LocalDate fechaFin = fechaHoy.plusYears(1);
+        vista.fechaFin.setDate(fechaFin);
     }
 
 
@@ -103,12 +114,14 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
         vista.btnAddCliente.addActionListener(this);
         vista.btnModificarCliente.addActionListener(this);
         vista.btnEliminarCliente.addActionListener(this);
+        vista.btnAddSuscripciones.addActionListener(this);
 
 
         // Configurando los ActionCommands para cada botón
         vista.btnAddCliente.setActionCommand("AñadirCliente");
         vista.btnModificarCliente.setActionCommand("ModificarCliente");
         vista.btnEliminarCliente.setActionCommand("EliminarCliente");
+        vista.btnAddSuscripciones.setActionCommand("AñadirSuscripcion");
     }
 
     private void addWindowsListerners() {
@@ -120,7 +133,8 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
         String command = e.getActionCommand();
         switch (command) {
             case "AñadirCliente":
-                if (hayCamposVacios()) JOptionPane.showMessageDialog(vista.frame, "Hay campos vacíos", "Error", JOptionPane.ERROR_MESSAGE);
+                if (hayCamposVacios())
+                    JOptionPane.showMessageDialog(vista.frame, "Hay campos vacíos", "Error", JOptionPane.ERROR_MESSAGE);
 
                 else if (!vista.getTxtEmail().getForeground().equals(new Color(0, 100, 0)) || !vista.getTxtTelefono().getForeground().equals(new Color(0, 100, 0))) {
                     JOptionPane.showMessageDialog(vista.frame, "Email o teléfono incorrectos", "Error", JOptionPane.ERROR_MESSAGE);
@@ -137,7 +151,24 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
             case "EliminarCliente":
                 break;
             case "AñadirSuscripcion":
+                LocalDate fechaInicio = vista.fechaInicio.getDate();
+                LocalDate fechaFin = vista.fechaFin.getDate();
+                boolean pagado = vista.comboPagado.getSelectedItem().toString().equals(EstadoPago.PAGADO.getValor());
+                String tipoSuscripcion = vista.comboTipoSuscripcion.getSelectedItem().toString();
+                double precio = Double.parseDouble(vista.txtPrecio.getText().replace(",", "."));
+                String nombreCliente = (String) vista.comboClientesRegistrados.getSelectedItem();
+                int idCliente = modelo.obtenerIdClientePorNombre(nombreCliente);
+
+                if (idCliente == -1) {
+                    JOptionPane.showMessageDialog(vista.frame, "Cliente no encontrado");
+                } else if (modelo.tieneSuscripcionActiva(idCliente)) {
+                    JOptionPane.showMessageDialog(vista.frame, "Este cliente ya tiene una suscripción activa");
+                } else {
+                    modelo.insertarSuscripcion(fechaInicio, fechaFin, pagado, tipoSuscripcion, precio, idCliente);
+                    JOptionPane.showMessageDialog(vista.frame, "Suscripción añadida correctamente");
+                }
                 break;
+
             case "ModificarSuscripcion":
                 break;
             case "EliminarSuscripcion":
@@ -216,15 +247,11 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
                 vista.txtApellido.setText((String) datosCliente.get("apellido"));
                 vista.txtEmail.setText((String) datosCliente.get("email"));
                 vista.txtTelefono.setText((String) datosCliente.get("telefono"));
-                // Asumiendo que el componente de fecha es compatible con LocalDate
                 vista.fechaNacimiento.setDate((LocalDate) datosCliente.get("fecha_nacimiento"));
                 vista.txtDireccion.setText((String) datosCliente.get("direccion"));
 
                 // configura las fechas de inicio y fin
-                vista.fechaInicio.setDateToToday();
-                LocalDate fechaInicio = LocalDate.now();
-                LocalDate fechaFin = fechaInicio.plusYears(1);
-                vista.fechaFin.setDate(fechaFin);
+                actualizarFechaInicioFin();
 
             }
         }

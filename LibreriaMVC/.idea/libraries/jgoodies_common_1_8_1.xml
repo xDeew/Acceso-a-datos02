@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="jgoodies-common-1.8.1">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/Libs/jgoodies-common-1.8.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/Libs/jgoodies-forms-1.8.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/Libs/LGoodDatePicker-8.3.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/Libs/mysql-connector-java-5.1.44-bin.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

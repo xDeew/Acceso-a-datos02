@@ -147,17 +147,14 @@ public class Modelo {
         try {
             Properties prop = new Properties();
 
-            // Establece las nuevas propiedades
             prop.setProperty("ip", ip);
             prop.setProperty("user", user);
             prop.setProperty("pass", pass);
             prop.setProperty("admin", adminPassword);
 
-            // Guarda las propiedades en un archivo
             output = new FileOutputStream("config.properties");
             prop.store(output, null);
 
-            // Actualiza las variables de instancia con los nuevos valores
             this.ip = ip;
             this.user = user;
             this.password = pass;
@@ -221,7 +218,9 @@ public class Modelo {
     public Map<String, Object> obtenerDatosCliente(String nombreCompleto) {
         String[] partes = nombreCompleto.split(" ");
         String nombre = partes[0];
-        String apellido = partes.length > 1 ? partes[1] : ""; // Asumiendo que el nombre completo puede contener un apellido
+        String apellido;
+        if (partes.length > 1) apellido = partes[1];
+        else apellido = "";
         String sentenciaSql = "SELECT * FROM Clientes WHERE nombre = ? AND apellido = ?";
         Map<String, Object> datosCliente = new HashMap<>();
 
@@ -237,7 +236,6 @@ public class Modelo {
                     datosCliente.put("telefono", rs.getString("telefono"));
                     datosCliente.put("fecha_nacimiento", rs.getDate("fecha_nacimiento").toLocalDate());
                     datosCliente.put("direccion", rs.getString("direccion"));
-                    // Y así con los demás campos que necesites
                 }
             }
         } catch (SQLException e) {
@@ -246,6 +244,29 @@ public class Modelo {
         }
 
         return datosCliente;
+    }
+
+    public void insertarSuscripcion(LocalDate fechaInicio, LocalDate fechaFin, boolean pagado, String tipoSuscripcion, double precio, int idCliente) {
+        String sentenciaSql = "INSERT INTO Suscripciones (fecha_inicio, fecha_fin, estado_pago, tipo, precio, id_cliente) VALUES (?, ?, ?, ?, ?, ?)";
+
+        try (PreparedStatement pstmt = conexion.prepareStatement(sentenciaSql)) {
+            pstmt.setDate(1, Date.valueOf(fechaInicio));
+            pstmt.setDate(2, Date.valueOf(fechaFin));
+            pstmt.setBoolean(3, pagado);
+            pstmt.setString(4, tipoSuscripcion);
+            pstmt.setDouble(5, precio);
+            pstmt.setInt(6, idCliente);
+
+            int filasAfectadas = pstmt.executeUpdate();
+            if (filasAfectadas > 0) {
+                System.out.println("Suscripción insertada con éxito.");
+            } else {
+                System.out.println("No se pudo insertar la suscripción.");
+            }
+        } catch (SQLException e) {
+            System.out.println("Error al insertar la suscripción: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     public double obtenerPrecioPorTipoSuscripcion(String tipoSuscripcion) {
@@ -267,6 +288,59 @@ public class Modelo {
                 break;
         }
         return precio;
+    }
+
+    public int obtenerIdClientePorNombre(String nombreCompleto) {
+        nombreCompleto = nombreCompleto.trim();
+        int ultimoEspacio = nombreCompleto.lastIndexOf(" ");
+        String nombre, apellido;
+        if (ultimoEspacio != -1) {
+            nombre = nombreCompleto.substring(0, ultimoEspacio);
+            apellido = nombreCompleto.substring(ultimoEspacio + 1);
+        } else {
+            nombre = nombreCompleto;
+            apellido = "";
+        }
+
+        String consultaSQL = "SELECT id_cliente FROM Clientes WHERE nombre = ? AND apellido = ? LIMIT 1";
+
+        try (PreparedStatement pstmt = conexion.prepareStatement(consultaSQL)) {
+            pstmt.setString(1, nombre);
+            pstmt.setString(2, apellido);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("id_cliente");
+                } else {
+                    return -1;
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error al obtener el ID del cliente: " + e.getMessage());
+            e.printStackTrace();
+            return -1;
+        }
+    }
+
+    public boolean tieneSuscripcionActiva(int idCliente) {
+        LocalDate hoy = LocalDate.now();
+        String consultaSQL = "SELECT COUNT(*) FROM Suscripciones WHERE id_cliente = ? AND fecha_inicio <= ? AND fecha_fin >= ?";
+
+        try (PreparedStatement pstmt = conexion.prepareStatement(consultaSQL)) {
+            pstmt.setInt(1, idCliente);
+            pstmt.setDate(2, Date.valueOf(hoy));
+            pstmt.setDate(3, Date.valueOf(hoy));
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;  // Verifica si el conteo es mayor que cero
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error al verificar suscripción activa: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return false;
     }
 
 

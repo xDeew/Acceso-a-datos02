@@ -8,7 +8,7 @@ import javax.swing.*;
 import java.awt.*;
 
 public class Vista extends JFrame {
-    private static final String TITULOFRAME = "Gimnasio"; // Agrega el título que desees
+    private static final String TITULOFRAME = "Gimnasio";
 
     public JTabbedPane tabbedPane1;
     public JPanel panel1;
@@ -34,6 +34,9 @@ public class Vista extends JFrame {
     public JButton btnModificarCliente;
     public JButton btnEliminarCliente;
     public JTextField txtTelefono;
+    public JButton btnAddSuscripciones;
+    public JButton btnAddModificarSuscripciones;
+    public JButton btnDeleteSuscripciones;
     JMenuItem itemOpciones;
     JMenuItem itemDesconectar;
     JMenuItem itemSalir;
