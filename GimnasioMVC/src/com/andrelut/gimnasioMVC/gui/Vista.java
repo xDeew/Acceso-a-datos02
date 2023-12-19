@@ -5,6 +5,7 @@ import com.andrelut.gimnasioMVC.enums.TipoSuscripcion;
 import com.github.lgooddatepicker.components.DatePicker;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 
 public class Vista extends JFrame {
@@ -37,6 +38,8 @@ public class Vista extends JFrame {
     public JButton btnAddSuscripciones;
     public JButton btnAddModificarSuscripciones;
     public JButton btnDeleteSuscripciones;
+    public JTable clientesTabla;
+    DefaultTableModel dtmClientes;
     JMenuItem itemOpciones;
     JMenuItem itemDesconectar;
     JMenuItem itemSalir;
@@ -81,6 +84,8 @@ public class Vista extends JFrame {
     }
 
     private void setTableModels() {
+        this.dtmClientes = new DefaultTableModel();
+        this.clientesTabla.setModel(dtmClientes);
 
     }
 

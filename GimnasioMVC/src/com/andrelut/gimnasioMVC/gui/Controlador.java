@@ -7,11 +7,16 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.*;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Vector;
 
 
 public class Controlador implements ActionListener, ItemListener, ListSelectionListener, WindowListener {
@@ -254,6 +259,40 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
                 actualizarFechaInicioFin();
 
             }
+        }
+    }
+
+    private DefaultTableModel construirTableModelClientes(ResultSet rs) throws SQLException {
+
+            // Obtiene los metadatos de la consulta
+            ResultSetMetaData metaData = rs.getMetaData();
+
+            // Nombres de las columnas
+            Vector<String> columnNames = new java.util.Vector<String>();
+            int columnCount = metaData.getColumnCount();
+            for (int column = 1; column <= columnCount; column++) {
+                columnNames.add(metaData.getColumnName(column));
+            }
+
+            // Datos de la tabla
+            Vector<Vector<Object>> data = new Vector<Vector<Object>>();
+            setDataVector(rs, columnCount, data);
+
+            vista.dtmClientes.setDataVector(data, columnNames);
+
+            return vista.dtmClientes;
+
+
+
+    }
+
+    private void setDataVector(ResultSet rs, int columnCount, Vector<Vector<Object>> data) throws SQLException {
+        while (rs.next()) {
+            Vector<Object> vector = new Vector<Object>();
+            for (int columnIndex = 1; columnIndex <= columnCount; columnIndex++) {
+                vector.add(rs.getObject(columnIndex));
+            }
+            data.add(vector);
         }
     }
 
