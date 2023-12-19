@@ -344,4 +344,16 @@ public class Modelo {
     }
 
 
+    public ResultSet consultarClientes() {
+        String consultaSQL = "SELECT * FROM Clientes";
+        try {
+            Statement stmt = conexion.createStatement();
+            ResultSet rs = stmt.executeQuery(consultaSQL);
+            return rs;
+        } catch (SQLException e) {
+            System.out.println("Error al consultar clientes: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
 }

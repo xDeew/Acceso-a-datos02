@@ -33,9 +33,11 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
         addActionListeners();
         addItemListeners();
         addWindowsListerners();
-        actualizarListaClientes();
+        refrescarTodo();
+
 
     }
+
 
     private void actualizarFechaInicioFin() {
         vista.fechaInicio.setDate(fechaHoy);
@@ -147,6 +149,7 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
                     modelo.insertarCliente(vista.txtNombre.getText(), vista.txtApellido.getText(), vista.fechaNacimiento.getDate(), vista.txtEmail.getText(), vista.txtTelefono.getText(), vista.txtDireccion.getText());
                     JOptionPane.showMessageDialog(vista.frame, "Cliente añadido correctamente");
                     actualizarListaClientes();
+                    refrescarClientes();
                     limpiarCampos();
 
                 }
@@ -261,27 +264,40 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
             }
         }
     }
+    public void refrescarClientes() {
+        try {
+            ResultSet rs = modelo.consultarClientes();
+            vista.dtmClientes = construirTableModelClientes(rs);
+            vista.clientesTabla.setModel(vista.dtmClientes);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    private void refrescarTodo() {
+        actualizarListaClientes();
+        refrescarClientes();
+
+    }
 
     private DefaultTableModel construirTableModelClientes(ResultSet rs) throws SQLException {
 
-            // Obtiene los metadatos de la consulta
-            ResultSetMetaData metaData = rs.getMetaData();
+        // Obtiene los metadatos de la consulta
+        ResultSetMetaData metaData = rs.getMetaData();
 
-            // Nombres de las columnas
-            Vector<String> columnNames = new java.util.Vector<String>();
-            int columnCount = metaData.getColumnCount();
-            for (int column = 1; column <= columnCount; column++) {
-                columnNames.add(metaData.getColumnName(column));
-            }
+        // Nombres de las columnas
+        Vector<String> columnNames = new java.util.Vector<String>();
+        int columnCount = metaData.getColumnCount();
+        for (int column = 1; column <= columnCount; column++) {
+            columnNames.add(metaData.getColumnName(column));
+        }
 
-            // Datos de la tabla
-            Vector<Vector<Object>> data = new Vector<Vector<Object>>();
-            setDataVector(rs, columnCount, data);
+        // Datos de la tabla
+        Vector<Vector<Object>> data = new Vector<Vector<Object>>();
+        setDataVector(rs, columnCount, data);
 
-            vista.dtmClientes.setDataVector(data, columnNames);
+        vista.dtmClientes.setDataVector(data, columnNames);
 
-            return vista.dtmClientes;
-
+        return vista.dtmClientes;
 
 
     }
