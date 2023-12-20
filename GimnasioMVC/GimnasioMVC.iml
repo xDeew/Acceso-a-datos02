@@ -8,5 +8,7 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="mysql-connector-j-8.2.0" level="project" />
+    <orderEntry type="library" name="ibatis-core-3.0" level="project" />
+    <orderEntry type="library" name="flyway-core-2.3.1" level="project" />
   </component>
 </module>

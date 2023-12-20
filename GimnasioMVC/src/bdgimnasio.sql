@@ -1,4 +1,3 @@
--- Creación de la tabla Clientes Relacionada con la tabla Suscripciones
 CREATE TABLE Clientes
 (
     id_cliente       INT PRIMARY KEY AUTO_INCREMENT,
@@ -73,4 +72,17 @@ CREATE TABLE Mantenimientos
     FOREIGN KEY (id_equipamiento) REFERENCES Equipamiento (id_equipamiento)
 );
 
+DELIMITER //
+CREATE FUNCTION TotalIngresosPorMes(in_year INT, in_month INT) RETURNS DECIMAL(10,2)
+BEGIN
+    DECLARE total DECIMAL(10,2);
+
+    SELECT SUM(precio) INTO total
+    FROM Suscripciones
+    WHERE YEAR(fecha_inicio) = in_year AND MONTH(fecha_inicio) = in_month;
+
+    RETURN total;
+END;
+//
+DELIMITER ;
 

@@ -47,7 +47,7 @@ public class Modelo {
             conexion = DriverManager.getConnection("jdbc:mysql://" + ip + ":3306/gimnasiodb", user, password);
             System.out.println("Conectado a la base de datos 'GimnasioDB'.");
             if (esNuevaBaseDeDatos) { // si es nueva base de datos (true), se ejecuta el script sql para crear las tablas
-                ejecutarScriptSQL(conexion, "bdgimnasio.sql");
+                ejecutarScriptSQL(conexion, "src/bdgimnasio.sql");
             }
         } catch (SQLException e) {
             System.out.println("Error al conectar con la base de datos: " + e.getMessage());
@@ -121,7 +121,7 @@ public class Modelo {
         InputStream inputStream = null;
         try {
             Properties prop = new Properties();
-            String propFileName = "config.properties";
+            String propFileName = "src/config.properties";
             inputStream = new FileInputStream(propFileName);
 
             prop.load(inputStream);
@@ -152,7 +152,7 @@ public class Modelo {
             prop.setProperty("pass", pass);
             prop.setProperty("admin", adminPassword);
 
-            output = new FileOutputStream("config.properties");
+            output = new FileOutputStream("src/config.properties");
             prop.store(output, null);
 
             this.ip = ip;
