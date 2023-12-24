@@ -6,6 +6,8 @@ import com.github.lgooddatepicker.components.DatePicker;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
 import java.awt.*;
 
 public class Vista extends JFrame {
@@ -39,6 +41,7 @@ public class Vista extends JFrame {
     public JButton btnAddModificarSuscripciones;
     public JButton btnDeleteSuscripciones;
     public JTable clientesTabla;
+    public JButton btnGananciasActuales;
     DefaultTableModel dtmClientes;
     JMenuItem itemOpciones;
     JMenuItem itemDesconectar;
@@ -87,6 +90,35 @@ public class Vista extends JFrame {
         this.dtmClientes = new DefaultTableModel();
         this.clientesTabla.setModel(dtmClientes);
 
+    }
+
+    public void adjustColumnWidth() {
+        for (int column = 0; column < clientesTabla.getColumnCount(); column++) {
+            TableColumn tableColumn = clientesTabla.getColumnModel().getColumn(column);
+            int preferredWidth = tableColumn.getMinWidth();
+            int maxWidth = tableColumn.getMaxWidth();
+
+            // Aumentar el ancho para la columna 'idCliente' si es la primera columna
+            if (column == 0) { // Cambiar a if (tableColumn.getIdentifier().equals("idCliente")) si se conoce el nombre de la columna
+                preferredWidth = Math.max(preferredWidth, 100); // Ajustar 100 al ancho deseado
+            } else if (column == 3) {
+                preferredWidth = Math.max(preferredWidth, 100);
+            }
+
+            for (int row = 0; row < clientesTabla.getRowCount(); row++) {
+                TableCellRenderer cellRenderer = clientesTabla.getCellRenderer(row, column);
+                Component c = clientesTabla.prepareRenderer(cellRenderer, row, column);
+                int width = c.getPreferredSize().width + clientesTabla.getIntercellSpacing().width;
+                preferredWidth = Math.max(preferredWidth, width);
+
+                if (preferredWidth >= maxWidth) {
+                    preferredWidth = maxWidth;
+                    break;
+                }
+            }
+
+            tableColumn.setPreferredWidth(preferredWidth);
+        }
     }
 
     private void setComboBox() {

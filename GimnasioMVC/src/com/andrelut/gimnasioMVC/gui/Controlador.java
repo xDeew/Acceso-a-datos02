@@ -122,6 +122,7 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
         vista.btnModificarCliente.addActionListener(this);
         vista.btnEliminarCliente.addActionListener(this);
         vista.btnAddSuscripciones.addActionListener(this);
+        vista.btnGananciasActuales.addActionListener(this);
 
 
         // Configurando los ActionCommands para cada botón
@@ -129,6 +130,7 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
         vista.btnModificarCliente.setActionCommand("ModificarCliente");
         vista.btnEliminarCliente.setActionCommand("EliminarCliente");
         vista.btnAddSuscripciones.setActionCommand("AñadirSuscripcion");
+        vista.btnGananciasActuales.setActionCommand("GananciasActuales");
     }
 
     private void addWindowsListerners() {
@@ -150,7 +152,7 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
                     JOptionPane.showMessageDialog(vista.frame, "Cliente añadido correctamente");
                     actualizarListaClientes();
                     refrescarClientes();
-                    limpiarCampos();
+                    limpiarCamposClientes();
 
                 }
                 break;
@@ -174,6 +176,7 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
                 } else {
                     modelo.insertarSuscripcion(fechaInicio, fechaFin, pagado, tipoSuscripcion, precio, idCliente);
                     JOptionPane.showMessageDialog(vista.frame, "Suscripción añadida correctamente");
+                    limpiarCamposSuscripciones();
                 }
                 break;
 
@@ -205,11 +208,39 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
                 break;
             case "EliminarMantenimiento":
                 break;
+            case "GananciasActuales":
+                List<Map<String, Object>> datosClientes = modelo.obtenerTodosLosClientesYSusSuscripciones();
+                double gananciasTotales = 0.0;
+                double gananciasEnEspera = 0.0;
+                for (Map<String, Object> datosCliente : datosClientes) {
+                    tipoSuscripcion = (String) datosCliente.get("tipo");
+                    precio = (Double) datosCliente.get("precio");
+                    boolean estadoPago = (Boolean) datosCliente.get("estado_pago");
+                    if (estadoPago) {
+                        gananciasTotales += modelo.obtenerGananciasPorClienteAdd(1, tipoSuscripcion);
+                    } else {
+                        gananciasEnEspera += modelo.obtenerGananciasPorClienteAdd(1, tipoSuscripcion);
+                    }
+                }
+                if (gananciasTotales == 0.0 && gananciasEnEspera == 0.0) {
+                    JOptionPane.showMessageDialog(vista.frame, "No hay suscripciones");
+                } else {
+                    JOptionPane.showMessageDialog(vista.frame, "Las ganancias actuales son de: " + gananciasTotales + "; las ganancias que se esperan de las suscripciones en espera de pago son de " + gananciasEnEspera);
+                }
+                break;
 
         }
     }
 
-    private void limpiarCampos() {
+    private void limpiarCamposSuscripciones() {
+        vista.fechaInicio.clear();
+        vista.fechaFin.clear();
+        vista.comboPagado.setSelectedIndex(-1);
+        vista.comboTipoSuscripcion.setSelectedIndex(-1);
+        vista.txtPrecio.setText("");
+    }
+
+    private void limpiarCamposClientes() {
         vista.txtNombre.setText("");
         vista.txtApellido.setText("");
         vista.txtEmail.setText("");
@@ -245,7 +276,7 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
         if (e.getSource() == vista.comboClientesRegistrados) {
             if (e.getStateChange() == ItemEvent.DESELECTED) {
                 // siempre limpia los campos cuando algo se deselecciona
-                limpiarCampos();
+                limpiarCamposClientes();
             } else {
                 String clienteSeleccionado = (String) vista.comboClientesRegistrados.getSelectedItem();
 
@@ -264,15 +295,19 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
             }
         }
     }
+
     public void refrescarClientes() {
         try {
             ResultSet rs = modelo.consultarClientes();
             vista.dtmClientes = construirTableModelClientes(rs);
             vista.clientesTabla.setModel(vista.dtmClientes);
+            vista.adjustColumnWidth();
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
+
     private void refrescarTodo() {
         actualizarListaClientes();
         refrescarClientes();

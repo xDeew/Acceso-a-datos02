@@ -322,6 +322,7 @@ public class Modelo {
         }
     }
 
+
     public boolean tieneSuscripcionActiva(int idCliente) {
         LocalDate hoy = LocalDate.now();
         String consultaSQL = "SELECT COUNT(*) FROM Suscripciones WHERE id_cliente = ? AND fecha_inicio <= ? AND fecha_fin >= ?";
@@ -355,5 +356,44 @@ public class Modelo {
             e.printStackTrace();
             return null;
         }
+    }
+
+    public List<Map<String, Object>> obtenerTodosLosClientesYSusSuscripciones() {
+        List<Map<String, Object>> datosClientes = new ArrayList<>();
+        String consultaSQL = "SELECT c.id_cliente, s.tipo, s.precio, s.estado_pago FROM Clientes c JOIN Suscripciones s ON c.id_cliente = s.id_cliente";
+
+        try (Statement stmt = conexion.createStatement();
+             ResultSet rs = stmt.executeQuery(consultaSQL)) {
+
+            while (rs.next()) { // iteramos sobre cada fila en el ResultSet, devuelve true si hay una fila siguiente
+                Map<String, Object> datosCliente = new HashMap<>();
+                datosCliente.put("id_cliente", rs.getInt("id_cliente"));
+                datosCliente.put("tipo", rs.getString("tipo"));
+                datosCliente.put("precio", rs.getDouble("precio"));
+                datosCliente.put("estado_pago", rs.getBoolean("estado_pago"));
+                datosClientes.add(datosCliente);
+            }
+        } catch (SQLException e) {
+            System.out.println("Error al obtener los clientes y sus suscripciones: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return datosClientes;
+    }
+
+    public double obtenerGananciasPorClienteAdd(int numClientes, String tipoSuscripcion) {
+        double ganancias = 0.0;
+        String sql = "{ ? = call ganancias_por_cliente_add(?, ?) }";
+        try (CallableStatement stmt = conexion.prepareCall(sql)) {
+            stmt.registerOutParameter(1, Types.DOUBLE); // registramos el parametro de retorno
+            stmt.setInt(2, numClientes);
+            stmt.setString(3, tipoSuscripcion);
+            stmt.execute(); // despues de ejecutar la funcion, el valor de retorno queda en el primer parametro
+            ganancias = stmt.getDouble(1); // obtenemos el valor de retorno
+        } catch (SQLException e) {
+            System.out.println("Error al obtener las ganancias por cliente: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return ganancias;
     }
 }

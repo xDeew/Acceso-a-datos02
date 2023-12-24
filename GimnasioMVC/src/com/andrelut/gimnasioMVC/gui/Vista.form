@@ -4,7 +4,7 @@
     <rowspec value="center:d:noGrow"/>
     <colspec value="fill:592px:noGrow"/>
     <constraints>
-      <xy x="20" y="19" width="690" height="511"/>
+      <xy x="20" y="19" width="690" height="545"/>
     </constraints>
     <properties/>
     <border type="none"/>
@@ -37,7 +37,9 @@
             <rowspec value="center:max(d;4px):noGrow"/>
             <rowspec value="top:4dlu:noGrow"/>
             <rowspec value="center:135px:noGrow"/>
-            <colspec value="fill:119px:noGrow"/>
+            <rowspec value="top:4dlu:noGrow"/>
+            <rowspec value="center:max(d;4px):noGrow"/>
+            <colspec value="fill:155px:noGrow"/>
             <colspec value="left:4dlu:noGrow"/>
             <colspec value="fill:d:grow"/>
             <constraints>
@@ -191,6 +193,15 @@
                 </constraints>
                 <properties>
                   <text value="Eliminar"/>
+                </properties>
+              </component>
+              <component id="c29c3" class="javax.swing.JButton" binding="btnGananciasActuales">
+                <constraints>
+                  <grid row="18" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="1" fill="1" indent="0" use-parent-layout="false"/>
+                  <forms defaultalign-vert="false"/>
+                </constraints>
+                <properties>
+                  <text value="Ganancias Actuales"/>
                 </properties>
               </component>
             </children>

@@ -72,5 +72,21 @@ CREATE TABLE Mantenimientos
     FOREIGN KEY (id_equipamiento) REFERENCES Equipamiento (id_equipamiento)
 );
 
-
+delimiter ||
+CREATE FUNCTION ganancias_por_cliente_add (num_clientes INT, tipo_suscripcion VARCHAR(50))
+RETURNS DECIMAL(10, 2)
+BEGIN
+    DECLARE ganancias DECIMAL(10, 2);
+    IF tipo_suscripcion = "Básica" THEN
+        SET ganancias = num_clientes * 20.00;
+    ELSEIF tipo_suscripcion = "Premium" THEN
+        SET ganancias = num_clientes * 35.00;
+    ELSEIF tipo_suscripcion = "Familiar" THEN
+        SET ganancias = num_clientes * 50.00;
+    ELSEIF tipo_suscripcion = "Estudiante" THEN
+        SET ganancias = num_clientes * 15.00;
+    END IF;
+    RETURN ganancias;
+end; ||
+delimiter ;
 
