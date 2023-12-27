@@ -1,6 +1,7 @@
 package com.andrelut.gimnasioMVC.gui;
 
 import com.andrelut.gimnasioMVC.enums.EstadoPago;
+import com.andrelut.gimnasioMVC.util.Util;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -10,30 +11,37 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.*;
+import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
 
 public class Controlador implements ActionListener, ItemListener, ListSelectionListener, WindowListener {
+
+
     private final Modelo modelo;
     private final Vista vista;
     private final LocalDate fechaHoy;
+    boolean refrescar;
 
 
     public Controlador(Modelo modelo, Vista vista) {
         this.modelo = modelo;
         this.vista = vista;
         fechaHoy = LocalDate.now();
-        iniciarControlador();
-        addActionListeners();
-        addItemListeners();
-        addWindowsListerners();
+        modelo.conectar();
+        setOptions();
+        addActionListeners(this);
+        addItemListeners(this);
+        addWindowListeners(this);
         refrescarTodo();
+        iniciarControlador();
 
 
     }
@@ -62,34 +70,34 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
         };
         vista.getTxtEmail().getDocument().addDocumentListener(validadorEmail);
 
-        DocumentListener validadorTelefono = new DocumentListener() {
-            public void changedUpdate(DocumentEvent e) {
-                validarTelefono();
+
+        vista.clientesTabla.setCellSelectionEnabled(true);
+        ListSelectionModel cellSelectionModel = vista.clientesTabla.getSelectionModel();
+        cellSelectionModel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        cellSelectionModel.addListSelectionListener(new ListSelectionListener() {
+            public void valueChanged(ListSelectionEvent e) {
+                if (!e.getValueIsAdjusting() && !((ListSelectionModel) e.getSource()).isSelectionEmpty()) {
+                    int row = vista.clientesTabla.getSelectedRow();
+                    vista.txtNombre.setText(String.valueOf(vista.clientesTabla.getValueAt(row, 1)));
+                    vista.txtApellido.setText(String.valueOf(vista.clientesTabla.getValueAt(row, 2)));
+                    vista.fechaNacimiento.setDate((Date.valueOf(String.valueOf(vista.clientesTabla.getValueAt(row, 3)))).toLocalDate());
+                    vista.txtEmail.setText(String.valueOf(vista.clientesTabla.getValueAt(row, 4)));
+                    vista.txtTelefono.setText(String.valueOf(vista.clientesTabla.getValueAt(row, 5)));
+                    vista.txtDireccion.setText(String.valueOf(vista.clientesTabla.getValueAt(row, 6)));
+
+                } else if (e.getValueIsAdjusting()
+                        && ((ListSelectionModel) e.getSource()).isSelectionEmpty() && !refrescar) {
+                    if (e.getSource().equals(vista.clientesTabla.getSelectionModel())) {
+                        limpiarCamposClientes();
+                    }
+
+                }
             }
 
-            public void removeUpdate(DocumentEvent e) {
-                validarTelefono();
-            }
-
-            public void insertUpdate(DocumentEvent e) {
-                validarTelefono();
-            }
-        };
-        vista.getTxtTelefono().getDocument().addDocumentListener(validadorTelefono);
-
-
+        });
     }
 
-    private void validarTelefono() {
-        String telefono = vista.getTxtTelefono().getText();
-        if ((telefono.startsWith("8") || telefono.startsWith("9")) && telefono.length() == 9) {
-            vista.getTxtTelefono().setForeground(new Color(0, 100, 0));
-        } else if (telefono.startsWith("6") && telefono.length() == 9) {
-            vista.getTxtTelefono().setForeground(new Color(0, 100, 0));
-        } else {
-            vista.getTxtTelefono().setForeground(Color.RED);
-        }
-    }
 
     private void validarEmail() {
         String email = vista.getTxtEmail().getText();
@@ -100,8 +108,8 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
         }
     }
 
-    private void addItemListeners() {
-        vista.comboClientesRegistrados.addItemListener(this);
+    private void addItemListeners(ItemListener listener) {
+        vista.comboClientesRegistrados.addItemListener(listener);
         vista.txtPrecio.setEditable(false);
         vista.comboTipoSuscripcion.addItemListener(new ItemListener() {
             @Override
@@ -117,36 +125,83 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
 
     }
 
-    private void addActionListeners() {
-        vista.btnAddCliente.addActionListener(this);
-        vista.btnModificarCliente.addActionListener(this);
-        vista.btnEliminarCliente.addActionListener(this);
-        vista.btnAddSuscripciones.addActionListener(this);
-        vista.btnGananciasActuales.addActionListener(this);
+    private void addActionListeners(ActionListener listener) {
+        vista.btnAddCliente.addActionListener(listener);
+        vista.btnModificarCliente.addActionListener(listener);
+        vista.btnEliminarCliente.addActionListener(listener);
+        vista.btnAddSuscripciones.addActionListener(listener);
+        vista.btnGananciaMensual.addActionListener(listener);
+        vista.itemOpciones.addActionListener(listener);
+        vista.itemConexion.addActionListener(listener);
+        vista.itemSalir.addActionListener(listener);
+        vista.btnValidate.addActionListener(listener);
 
 
-        // Configurando los ActionCommands para cada botón
-        vista.btnAddCliente.setActionCommand("AñadirCliente");
-        vista.btnModificarCliente.setActionCommand("ModificarCliente");
-        vista.btnEliminarCliente.setActionCommand("EliminarCliente");
-        vista.btnAddSuscripciones.setActionCommand("AñadirSuscripcion");
-        vista.btnGananciasActuales.setActionCommand("GananciasActuales");
     }
 
-    private void addWindowsListerners() {
-
+    private void addWindowListeners(WindowListener listener) {
+        vista.addWindowListener(listener);
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
         String command = e.getActionCommand();
+        List<String> comandosNoRequierenConexion = Arrays.asList("conectar", "salir");
+        if (!comandosNoRequierenConexion.contains(command) && !modelo.estaConectado()) {
+            JOptionPane.showMessageDialog(vista.frame, "Para poder realizar esta operación necesita estar conectado con la base de datos.", "Error de Conexión", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
         switch (command) {
-            case "AñadirCliente":
+            case "opciones":
+                vista.adminPasswordDialog.setVisible(true);
+                break;
+            case "desconectar":
+                modelo.desconectar();
+                JOptionPane.showMessageDialog(vista.frame, "Desconectado de la base de datos.");
+                vista.itemConexion.setText("Conectar");
+                vista.itemConexion.setActionCommand("conectar");
+                vista.comboClientesRegistrados.setEnabled(false);
+
+                break;
+            case "conectar":
+                modelo.conectar();
+                JOptionPane.showMessageDialog(vista.frame, "Conectado a la base de datos.");
+                vista.itemConexion.setText("Desconectar");
+                vista.itemConexion.setActionCommand("desconectar");
+                vista.comboClientesRegistrados.setEnabled(true);
+
+                break;
+            case "salir":
+                System.exit(0);
+                break;
+            case "abrirOpciones":
+                if (String.valueOf(vista.adminPassword.getPassword()).equals(modelo.getAdminPassword())) {
+                    vista.adminPassword.setText("");
+                    vista.adminPasswordDialog.dispose();
+                    vista.optionDialog.setVisible(true);
+                } else {
+                    Util.showErrorAlert("La contraseña introducida no es correcta.");
+                }
+                break;
+            case "guardarOpciones":
+                modelo.setPropValues(vista.optionDialog.txtIP.getText(), vista.optionDialog.txtUser.getText(),
+                        String.valueOf(vista.optionDialog.pfPass.getPassword()), String.valueOf(vista.optionDialog.pfAdmin.getPassword()));
+                vista.optionDialog.dispose();
+                vista.dispose();
+                new Controlador(new Modelo(), new Vista());
+                break;
+
+            case "añadirCliente":
                 if (hayCamposVacios())
                     JOptionPane.showMessageDialog(vista.frame, "Hay campos vacíos", "Error", JOptionPane.ERROR_MESSAGE);
 
-                else if (!vista.getTxtEmail().getForeground().equals(new Color(0, 100, 0)) || !vista.getTxtTelefono().getForeground().equals(new Color(0, 100, 0))) {
-                    JOptionPane.showMessageDialog(vista.frame, "Email o teléfono incorrectos", "Error", JOptionPane.ERROR_MESSAGE);
+                else if (!vista.getTxtEmail().getForeground().equals(new Color(0, 100, 0))) {
+                    JOptionPane.showMessageDialog(vista.frame, "Email no válido", "Error", JOptionPane.ERROR_MESSAGE);
+                } else if (vista.getTxtTelefono().getText().length() != 9) {
+                    JOptionPane.showMessageDialog(vista.frame, "Teléfono no válido, ha de tener un máximo de 9 dígitos", "Error", JOptionPane.ERROR_MESSAGE);
+                } else if (modelo.existeEmail(vista.txtEmail.getText())) {
+                    JOptionPane.showMessageDialog(vista.frame, "Email ya registrado", "Error", JOptionPane.ERROR_MESSAGE);
                 } else {
                     modelo.insertarCliente(vista.txtNombre.getText(), vista.txtApellido.getText(), vista.fechaNacimiento.getDate(), vista.txtEmail.getText(), vista.txtTelefono.getText(), vista.txtDireccion.getText());
                     JOptionPane.showMessageDialog(vista.frame, "Cliente añadido correctamente");
@@ -156,11 +211,11 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
 
                 }
                 break;
-            case "ModificarCliente":
+            case "modificarCliente":
                 break;
-            case "EliminarCliente":
+            case "eliminarCliente":
                 break;
-            case "AñadirSuscripcion":
+            case "añadirSuscripcion":
                 LocalDate fechaInicio = vista.fechaInicio.getDate();
                 LocalDate fechaFin = vista.fechaFin.getDate();
                 boolean pagado = vista.comboPagado.getSelectedItem().toString().equals(EstadoPago.PAGADO.getValor());
@@ -208,7 +263,7 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
                 break;
             case "EliminarMantenimiento":
                 break;
-            case "GananciasActuales":
+            case "gananciaMensual":
                 List<Map<String, Object>> datosClientes = modelo.obtenerTodosLosClientesYSusSuscripciones();
                 double gananciasTotales = 0.0;
                 double gananciasEnEspera = 0.0;
@@ -225,11 +280,26 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
                 if (gananciasTotales == 0.0 && gananciasEnEspera == 0.0) {
                     JOptionPane.showMessageDialog(vista.frame, "No hay suscripciones");
                 } else {
-                    JOptionPane.showMessageDialog(vista.frame, "Las ganancias actuales son de: " + gananciasTotales + "; las ganancias que se esperan de las suscripciones en espera de pago son de " + gananciasEnEspera);
+                    JOptionPane.showMessageDialog(
+                            vista.frame,
+                            "<html><body><p style='width: 200px;'>" +
+                                    "Las ganancias mensuales actuales ascienden a: <b>" + String.format("%.2f", gananciasTotales) + "</b> euros." +
+                                    "<br><br>Adicionalmente, las ganancias correspondientes a las suscripciones pendientes de pago suman: <b>" + String.format("%.2f", gananciasEnEspera) + "</b> euros." +
+                                    "</p></body></html>",
+                            "Informe de Ganancias",
+                            JOptionPane.INFORMATION_MESSAGE
+                    );
                 }
                 break;
 
         }
+    }
+
+    private void setOptions() {
+        vista.optionDialog.txtIP.setText(modelo.getIp());
+        vista.optionDialog.txtUser.setText(modelo.getUser());
+        vista.optionDialog.pfPass.setText(modelo.getPassword());
+        vista.optionDialog.pfAdmin.setText(modelo.getAdminPassword());
     }
 
     private void limpiarCamposSuscripciones() {
@@ -311,6 +381,7 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
     private void refrescarTodo() {
         actualizarListaClientes();
         refrescarClientes();
+        refrescar = false;
 
     }
 
@@ -355,7 +426,7 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
 
     @Override
     public void windowClosing(WindowEvent e) {
-
+        System.exit(0);
     }
 
     @Override

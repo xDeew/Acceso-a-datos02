@@ -15,12 +15,26 @@ public class Modelo {
     private String adminPassword;
     private boolean esNuevaBaseDeDatos = false;
 
+    public String getIp() {
+        return ip;
+    }
+
+    public String getUser() {
+        return user;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public String getAdminPassword() {
+        return adminPassword;
+    }
 
     private Connection conexion;
 
     public Modelo() {
         getPropValues();
-        conectar();
     }
 
     public void conectar() {
@@ -35,8 +49,6 @@ public class Modelo {
                     e.printStackTrace();
                     return;
                 }
-            } else {
-                System.out.println("La base de datos 'GimnasioDB' ya existe. Continuando con la ejecución del programa.");
             }
         } catch (SQLException e) {
             System.out.println("Error al conectar con la base de datos: " + e.getMessage());
@@ -69,6 +81,18 @@ public class Modelo {
         return false;
     }
 
+    public boolean estaConectado() {
+        try {
+            if (conexion != null && !conexion.isClosed()) {
+                return true;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+
     public void desconectar() {
         if (conexion != null) {
             try {
@@ -92,23 +116,33 @@ public class Modelo {
 
             String line;
             StringBuilder sb = new StringBuilder();
+            boolean esBloqueFuncion = false;
 
             while ((line = reader.readLine()) != null) {
                 if (line.startsWith("--") || line.trim().isEmpty()) {
                     continue;
                 }
 
-                sb.append(line);
-                if (line.endsWith(";")) {
-                    try {
-                        stmt.executeUpdate(sb.toString());
-                    } catch (SQLException e) {
-                        if (!e.getMessage().contains("already exists")) {
+                // Comenzar o finalizar un bloque de función/procedimiento
+                if (line.startsWith("delimiter")) {
+                    esBloqueFuncion = true; // Cambia el estado si se encuentra 'delimiter'
+                    continue;
+                }
+
+                if (esBloqueFuncion || line.endsWith(";")) {
+                    sb.append(line);
+                    if (!esBloqueFuncion) {
+                        // Ejecutar declaración SQL
+                        try {
+                            stmt.execute(sb.toString());
+                            sb = new StringBuilder();
+                        } catch (SQLException e) {
                             System.out.println("Error al ejecutar el script SQL: " + e.getMessage());
                             e.printStackTrace();
                         }
                     }
-                    sb = new StringBuilder();
+                } else {
+                    sb.append(line);
                 }
             }
         } catch (IOException | SQLException e) {
@@ -142,7 +176,7 @@ public class Modelo {
         }
     }
 
-    private void setPropValues(String ip, String user, String pass, String adminPassword) {
+    public void setPropValues(String ip, String user, String pass, String adminPassword) {
         OutputStream output = null;
         try {
             Properties prop = new Properties();
@@ -395,5 +429,22 @@ public class Modelo {
             e.printStackTrace();
         }
         return ganancias;
+    }
+
+    public boolean existeEmail(String email) {
+        String consultaSQL = "SELECT COUNT(*) FROM Clientes WHERE email = ?";
+        try (PreparedStatement pstmt = conexion.prepareStatement(consultaSQL)) {
+            pstmt.setString(1, email);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                    // comprueba si hay un email existente, es decir, si ya existe una fila con ese email pues el conteo será mayor que cero
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error al verificar la existencia del email: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return false;
     }
 }

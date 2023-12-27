@@ -1,23 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="com.andrelut.gimnasioMVC.gui.OptionDialog">
-  <grid id="27dc6" binding="panel1" default-binding="true" layout-manager="FormLayout">
-    <rowspec value="center:d:noGrow"/>
+  <grid id="27dc6" binding="panel1" layout-manager="FormLayout">
+    <rowspec value="center:29px:noGrow"/>
+    <rowspec value="top:4dlu:noGrow"/>
+    <rowspec value="center:29px:noGrow"/>
+    <rowspec value="top:10dlu:noGrow"/>
+    <rowspec value="center:31px:noGrow"/>
+    <rowspec value="top:8dlu:noGrow"/>
+    <rowspec value="center:37px:noGrow"/>
     <rowspec value="top:4dlu:noGrow"/>
     <rowspec value="center:max(d;4px):noGrow"/>
-    <rowspec value="top:4dlu:noGrow"/>
-    <rowspec value="center:max(d;4px):noGrow"/>
-    <rowspec value="top:4dlu:noGrow"/>
-    <rowspec value="center:max(d;4px):noGrow"/>
-    <colspec value="fill:137px:noGrow"/>
+    <colspec value="fill:176px:noGrow"/>
     <colspec value="left:4dlu:noGrow"/>
     <colspec value="fill:d:grow"/>
     <constraints>
-      <xy x="20" y="20" width="500" height="188"/>
+      <xy x="20" y="20" width="500" height="200"/>
     </constraints>
     <properties/>
     <border type="none"/>
     <children>
-      <component id="29a8f" class="javax.swing.JLabel">
+      <component id="110f" class="javax.swing.JLabel">
         <constraints>
           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
           <forms/>
@@ -26,52 +28,34 @@
           <text value="IP"/>
         </properties>
       </component>
-      <component id="cf690" class="javax.swing.JLabel">
+      <component id="aba9e" class="javax.swing.JLabel">
         <constraints>
           <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
           <forms/>
         </constraints>
         <properties>
-          <text value="User"/>
+          <text value="Usuario"/>
         </properties>
       </component>
-      <component id="2235b" class="javax.swing.JLabel">
+      <component id="da9a6" class="javax.swing.JLabel">
         <constraints>
           <grid row="4" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
           <forms/>
         </constraints>
         <properties>
-          <text value="Password"/>
+          <text value="Contraseña"/>
         </properties>
       </component>
-      <component id="28e1c" class="javax.swing.JLabel">
+      <component id="c9105" class="javax.swing.JLabel">
         <constraints>
           <grid row="6" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
           <forms/>
         </constraints>
         <properties>
-          <text value="Admin password"/>
+          <text value="Contraseña del admin"/>
         </properties>
       </component>
-      <component id="b1c02" class="javax.swing.JPasswordField" binding="pfAdmin">
-        <constraints>
-          <grid row="6" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
-            <preferred-size width="150" height="-1"/>
-          </grid>
-          <forms defaultalign-horz="false"/>
-        </constraints>
-        <properties/>
-      </component>
-      <component id="ab4db" class="javax.swing.JPasswordField" binding="pfPass">
-        <constraints>
-          <grid row="4" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
-            <preferred-size width="150" height="-1"/>
-          </grid>
-          <forms defaultalign-horz="false"/>
-        </constraints>
-        <properties/>
-      </component>
-      <component id="8d46d" class="javax.swing.JTextField" binding="txtIP">
+      <component id="9168f" class="javax.swing.JTextField" binding="txtIP">
         <constraints>
           <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
             <preferred-size width="150" height="-1"/>
@@ -80,7 +64,7 @@
         </constraints>
         <properties/>
       </component>
-      <component id="2ffc9" class="javax.swing.JTextField" binding="txtUser">
+      <component id="d69c3" class="javax.swing.JTextField" binding="txtUser">
         <constraints>
           <grid row="2" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
             <preferred-size width="150" height="-1"/>
@@ -88,6 +72,34 @@
           <forms defaultalign-horz="false"/>
         </constraints>
         <properties/>
+      </component>
+      <component id="56594" class="javax.swing.JPasswordField" binding="pfPass">
+        <constraints>
+          <grid row="4" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+            <preferred-size width="150" height="-1"/>
+          </grid>
+          <forms defaultalign-horz="false"/>
+        </constraints>
+        <properties/>
+      </component>
+      <component id="eff1d" class="javax.swing.JPasswordField" binding="pfAdmin">
+        <constraints>
+          <grid row="6" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+            <preferred-size width="150" height="-1"/>
+          </grid>
+          <forms defaultalign-horz="false"/>
+        </constraints>
+        <properties/>
+      </component>
+      <component id="20dbc" class="javax.swing.JButton" binding="btnOpcionesGuardar">
+        <constraints>
+          <grid row="8" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+          <forms/>
+        </constraints>
+        <properties>
+          <actionCommand value="guardarOpciones"/>
+          <text value="Guardar"/>
+        </properties>
       </component>
     </children>
   </grid>

@@ -1,92 +1,90 @@
-CREATE TABLE Clientes
+create table clientes
 (
-    id_cliente       INT PRIMARY KEY AUTO_INCREMENT,
-    nombre           VARCHAR(50),
-    apellido         VARCHAR(50),
-    fecha_nacimiento DATE,
-    email            VARCHAR(100),
-    telefono         VARCHAR(15),
-    direccion        VARCHAR(100)
+    id_cliente       int primary key auto_increment,
+    nombre           varchar(50),
+    apellido         varchar(50),
+    fecha_nacimiento date,
+    email            varchar(100),
+    telefono         varchar(15),
+    direccion        varchar(100)
 );
 
--- Creación de la tabla Suscripciones
-CREATE TABLE Suscripciones
+-- creación de la tabla suscripciones
+create table suscripciones
 (
-    id_suscripcion INT PRIMARY KEY AUTO_INCREMENT,
-    id_cliente     INT,
-    fecha_inicio   DATE,
-    fecha_fin      DATE,
-    tipo           VARCHAR(50),
-    precio         DECIMAL(10, 2),
-    estado_pago    BOOLEAN,
-    FOREIGN KEY (id_cliente) REFERENCES Clientes (id_cliente)
+    id_suscripcion int primary key auto_increment,
+    id_cliente     int,
+    fecha_inicio   date,
+    fecha_fin      date,
+    tipo           varchar(50),
+    precio         decimal(10, 2),
+    estado_pago    boolean,
+    foreign key (id_cliente) references clientes (id_cliente)
 );
 
--- Creación de la tabla Clases Relacionada con la tabla Entrenadores
-CREATE TABLE Clases
+-- creación de la tabla clases relacionada con la tabla entrenadores
+create table clases
 (
-    id_clase         INT PRIMARY KEY AUTO_INCREMENT,
-    nombre           VARCHAR(50),
-    tipo             VARCHAR(50),
-    capacidad_maxima INT,
-    duracion         TIME,
-    instructor       VARCHAR(50)
+    id_clase         int primary key auto_increment,
+    nombre           varchar(50),
+    tipo             varchar(50),
+    capacidad_maxima int,
+    duracion         time,
+    instructor       varchar(50)
 );
 
--- Creación de la tabla Entrenadores
-CREATE TABLE Entrenadores
+-- creación de la tabla entrenadores
+create table entrenadores
 (
-    id_entrenador      INT PRIMARY KEY AUTO_INCREMENT,
-    nombre             VARCHAR(50),
-    especialidad       VARCHAR(50),
-    horas_disponibles  INT,
-    fecha_contratacion DATE,
-    salario            DECIMAL(10, 2)
+    id_entrenador      int primary key auto_increment,
+    nombre             varchar(50),
+    especialidad       varchar(50),
+    horas_disponibles  int,
+    fecha_contratacion date,
+    salario            decimal(10, 2)
 );
 
--- Añadimos la columna id_entrenador a la tabla Clases para poder relacionarla con la tabla Entrenadores
-ALTER TABLE Clases
-    ADD id_entrenador INT,
-    ADD FOREIGN KEY (id_entrenador) REFERENCES Entrenadores (id_entrenador);
+-- añadimos la columna id_entrenador a la tabla clases para poder relacionarla con la tabla entrenadores
+alter table clases
+    add id_entrenador int,
+    add foreign key (id_entrenador) references entrenadores (id_entrenador);
 
-
--- Creación de la tabla Equipamiento Relacionada con la tabla Mantenimientos
-CREATE TABLE Equipamiento
+-- creación de la tabla equipamiento relacionada con la tabla mantenimientos
+create table equipamiento
 (
-    id_equipamiento INT PRIMARY KEY AUTO_INCREMENT,
-    tipo            VARCHAR(50),
-    marca           VARCHAR(50),
-    fecha_compra    DATE,
-    costo           DECIMAL(10, 2),
-    estado          VARCHAR(50)
+    id_equipamiento int primary key auto_increment,
+    tipo            varchar(50),
+    marca           varchar(50),
+    fecha_compra    date,
+    costo           decimal(10, 2),
+    estado          varchar(50)
 );
 
--- Creación de la tabla Mantenimientos Relacionada con la tabla Equipamiento
-CREATE TABLE Mantenimientos
+-- creación de la tabla mantenimientos relacionada con la tabla equipamiento
+create table mantenimientos
 (
-    id_mantenimiento    INT PRIMARY KEY AUTO_INCREMENT,
-    id_equipamiento     INT,
-    fecha_mantenimiento DATE,
-    descripcion         VARCHAR(100),
-    costo               DECIMAL(10, 2),
-    FOREIGN KEY (id_equipamiento) REFERENCES Equipamiento (id_equipamiento)
+    id_mantenimiento    int primary key auto_increment,
+    id_equipamiento     int,
+    fecha_mantenimiento date,
+    descripcion         varchar(100),
+    costo               decimal(10, 2),
+    foreign key (id_equipamiento) references equipamiento (id_equipamiento)
 );
 
 delimiter ||
-CREATE FUNCTION ganancias_por_cliente_add (num_clientes INT, tipo_suscripcion VARCHAR(50))
-RETURNS DECIMAL(10, 2)
-BEGIN
-    DECLARE ganancias DECIMAL(10, 2);
-    IF tipo_suscripcion = "Básica" THEN
-        SET ganancias = num_clientes * 20.00;
-    ELSEIF tipo_suscripcion = "Premium" THEN
-        SET ganancias = num_clientes * 35.00;
-    ELSEIF tipo_suscripcion = "Familiar" THEN
-        SET ganancias = num_clientes * 50.00;
-    ELSEIF tipo_suscripcion = "Estudiante" THEN
-        SET ganancias = num_clientes * 15.00;
-    END IF;
-    RETURN ganancias;
+create function ganancias_por_cliente_add (num_clientes int, tipo_suscripcion varchar(50))
+    returns decimal(10, 2)
+begin
+    declare ganancias decimal(10, 2);
+    if tipo_suscripcion = "básica" then
+        set ganancias = num_clientes * 20.00;
+    elseif tipo_suscripcion = "premium" then
+        set ganancias = num_clientes * 35.00;
+    elseif tipo_suscripcion = "familiar" then
+        set ganancias = num_clientes * 50.00;
+    elseif tipo_suscripcion = "estudiante" then
+        set ganancias = num_clientes * 15.00;
+    end if;
+    return ganancias;
 end; ||
 delimiter ;
-
