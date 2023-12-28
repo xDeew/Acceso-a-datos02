@@ -130,11 +130,14 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
         vista.btnModificarCliente.addActionListener(listener);
         vista.btnEliminarCliente.addActionListener(listener);
         vista.btnAddSuscripciones.addActionListener(listener);
+        vista.btnModificarSuscripciones.addActionListener(listener);
+        vista.btnDeleteSuscripciones.addActionListener(listener);
         vista.btnGananciaMensual.addActionListener(listener);
         vista.itemOpciones.addActionListener(listener);
         vista.itemConexion.addActionListener(listener);
         vista.itemSalir.addActionListener(listener);
         vista.btnValidate.addActionListener(listener);
+
 
 
     }
@@ -231,37 +234,38 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
                 } else {
                     modelo.insertarSuscripcion(fechaInicio, fechaFin, pagado, tipoSuscripcion, precio, idCliente);
                     JOptionPane.showMessageDialog(vista.frame, "Suscripción añadida correctamente");
+                    refrescarSuscripciones();
                     limpiarCamposSuscripciones();
                 }
                 break;
 
-            case "ModificarSuscripcion":
+            case "modificarSuscripcion":
                 break;
-            case "EliminarSuscripcion":
+            case "eliminarSuscripcion":
                 break;
-            case "AñadirClase":
+            case "añadirClase":
                 break;
-            case "ModificarClase":
+            case "modificarClase":
                 break;
-            case "EliminarClase":
+            case "eliminarClase":
                 break;
-            case "AñadirEntrenador":
+            case "añadirEntrenador":
                 break;
-            case "ModificarEntrenador":
+            case "modificarEntrenador":
                 break;
-            case "EliminarEntrenador":
+            case "eliminarEntrenador":
                 break;
-            case "AñadirEquipamiento":
+            case "añadirEquipamiento":
                 break;
-            case "ModificarEquipamiento":
+            case "modificarEquipamiento":
                 break;
-            case "EliminarEquipamiento":
+            case "eliminarEquipamiento":
                 break;
-            case "RegistrarMantenimiento":
+            case "registrarMantenimiento":
                 break;
-            case "ModificarMantenimiento":
+            case "modificarMantenimiento":
                 break;
-            case "EliminarMantenimiento":
+            case "eliminarMantenimiento":
                 break;
             case "gananciaMensual":
                 List<Map<String, Object>> datosClientes = modelo.obtenerTodosLosClientesYSusSuscripciones();
@@ -371,16 +375,58 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
             ResultSet rs = modelo.consultarClientes();
             vista.dtmClientes = construirTableModelClientes(rs);
             vista.clientesTabla.setModel(vista.dtmClientes);
-            vista.adjustColumnWidth();
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
+    public void refrescarSuscripciones() {
+        try {
+            ResultSet rs = modelo.consultarSuscripciones();
+            vista.dtmSuscripciones = construirTableModelSuscripciones(rs);
+            vista.suscripcionesTabla.setModel(vista.dtmSuscripciones);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+
+    private DefaultTableModel construirTableModelSuscripciones(ResultSet rs) throws SQLException {
+        // Obtiene los metadatos de la consulta
+        ResultSetMetaData metaData = null;
+        try {
+            metaData = rs.getMetaData();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        // Nombres de las columnas
+        Vector<String> columnNames = new java.util.Vector<String>();
+        int columnCount = 0;
+        try {
+            columnCount = metaData.getColumnCount();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        for (int column = 1; column <= columnCount; column++) {
+            columnNames.add(metaData.getColumnName(column));
+        }
+
+        // Datos de la tabla
+        Vector<Vector<Object>> data = new Vector<Vector<Object>>();
+        setDataVector(rs, columnCount, data);
+
+        vista.dtmSuscripciones.setDataVector(data, columnNames);
+
+        return vista.dtmSuscripciones;
+    }
+
     private void refrescarTodo() {
         actualizarListaClientes();
         refrescarClientes();
+        refrescarSuscripciones();
         refrescar = false;
 
     }

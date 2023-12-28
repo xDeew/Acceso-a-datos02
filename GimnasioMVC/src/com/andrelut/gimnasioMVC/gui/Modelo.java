@@ -447,4 +447,17 @@ public class Modelo {
         }
         return false;
     }
+
+    public ResultSet consultarSuscripciones() {
+        String consultaSQL = "SELECT * FROM Suscripciones";
+        try {
+            Statement stmt = conexion.createStatement();
+            ResultSet rs = stmt.executeQuery(consultaSQL);
+            return rs;
+        } catch (SQLException e) {
+            System.out.println("Error al consultar suscripciones: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
 }

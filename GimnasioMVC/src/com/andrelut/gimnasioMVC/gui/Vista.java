@@ -40,19 +40,20 @@ public class Vista extends JFrame {
     public JButton btnEliminarCliente;
     public JTextField txtTelefono;
     public JButton btnAddSuscripciones;
-    public JButton btnAddModificarSuscripciones;
+    public JButton btnModificarSuscripciones;
     public JButton btnDeleteSuscripciones;
     public JTable clientesTabla;
     public JButton btnGananciaMensual;
     public OptionDialog optionDialog;
     public DefaultTableModel dtmClientes;
+    public DefaultTableModel dtmSuscripciones;
     public JMenuItem itemOpciones;
     public JMenuItem itemConexion;
     public JMenuItem itemSalir;
     public JButton btnValidate;
     public JPasswordField adminPassword;
     public JDialog adminPasswordDialog;
-
+    public JTable suscripcionesTabla;
 
 
     public Vista() {
@@ -61,27 +62,16 @@ public class Vista extends JFrame {
     }
 
     public void initFrame() {
+        panel1.setLayout(new BorderLayout());
+        panel1.add(tabbedPane1, BorderLayout.CENTER);
         this.setContentPane(panel1);
         this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         this.pack();
-        this.setLayout(null);
-        this.setSize(1100, 600);
+        this.setVisible(true);
+        this.setSize(new Dimension(this.getWidth() + 200, this.getHeight()));
         this.setLocationRelativeTo(null);
-
-        int tabbedPaneAjusteAncho = 20;
-
-        // establecer el tamaño del tabbedpane al tamaño del frame; el ancho del frame se reduce en 20 para que no se salga de la pantalla
-        tabbedPane1.setBounds(0, 0, this.getWidth() - tabbedPaneAjusteAncho, this.getHeight());
-
-        // ComponentListener para ajustar el tamaño del tabbedPane1 cuando se redimensione el JFrame
-        this.addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentResized(ComponentEvent e) {
-                tabbedPane1.setBounds(0, 0, Vista.this.getWidth() - tabbedPaneAjusteAncho, Vista.this.getHeight());
-            }
-        });
-
         optionDialog = new OptionDialog(this);
+
         setMenu();
         setAdminDialog();
         setComboBox();
@@ -111,14 +101,14 @@ public class Vista extends JFrame {
     }
 
     private void setAdminDialog() {
-        btnValidate= new JButton("Validar");
+        btnValidate = new JButton("Validar");
         btnValidate.setActionCommand("abrirOpciones");
-        adminPassword=new JPasswordField();
-        adminPassword.setPreferredSize(new Dimension(100,26));
-        Object[] options = new Object[] {adminPassword,btnValidate};
-        JOptionPane jop= new JOptionPane("Introduce la contraseña",
-                JOptionPane.WARNING_MESSAGE,JOptionPane.YES_NO_OPTION,null,options);
-        adminPasswordDialog=new JDialog(this,"Opciones",true);
+        adminPassword = new JPasswordField();
+        adminPassword.setPreferredSize(new Dimension(100, 26));
+        Object[] options = new Object[]{adminPassword, btnValidate};
+        JOptionPane jop = new JOptionPane("Introduce la contraseña",
+                JOptionPane.WARNING_MESSAGE, JOptionPane.YES_NO_OPTION, null, options);
+        adminPasswordDialog = new JDialog(this, "Opciones", true);
         adminPasswordDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         adminPasswordDialog.setContentPane(jop);
         adminPasswordDialog.pack();
@@ -129,46 +119,12 @@ public class Vista extends JFrame {
     private void setTableModels() {
         this.dtmClientes = new DefaultTableModel();
         this.clientesTabla.setModel(dtmClientes);
+        this.dtmSuscripciones = new DefaultTableModel();
+        this.suscripcionesTabla.setModel(dtmSuscripciones);
+
 
     }
 
-    public void adjustColumnWidth() {
-        for (int column = 0; column < clientesTabla.getColumnCount(); column++) {
-            TableColumn tableColumn = clientesTabla.getColumnModel().getColumn(column);
-            int preferredWidth = tableColumn.getMinWidth();
-            int maxWidth = tableColumn.getMaxWidth();
-
-
-            if (column == 0) {
-                preferredWidth = Math.max(preferredWidth, 80);
-            } else if (column == 2) {
-                preferredWidth = Math.max(preferredWidth, 75);
-            } else if (column == 3) {
-                preferredWidth = Math.max(preferredWidth, 130);
-            } else if (column == 4) {
-                preferredWidth = Math.max(preferredWidth, 180);
-            } else if (column == 5) {
-                preferredWidth = Math.max(preferredWidth, 100);
-            }
-
-            for (int row = 0; row < clientesTabla.getRowCount(); row++) {
-                TableCellRenderer cellRenderer = clientesTabla.getCellRenderer(row, column);
-                Component c = clientesTabla.prepareRenderer(cellRenderer, row, column);
-                int width = c.getPreferredSize().width + clientesTabla.getIntercellSpacing().width;
-                preferredWidth = Math.max(preferredWidth, width);
-
-                if (preferredWidth >= maxWidth) {
-                    preferredWidth = maxWidth;
-                    break;
-                }
-            }
-
-            tableColumn.setPreferredWidth(preferredWidth);
-            clientesTabla.revalidate(); // se utiliza cuando se hacen cambios que afectan el tamaño y/o disposcion de los componentes dentro del contenedor (en este caso la tabla)
-
-
-        }
-    }
 
     private void setComboBox() {
         for (TipoSuscripcion tipo : TipoSuscripcion.values()) {
@@ -181,7 +137,6 @@ public class Vista extends JFrame {
         }
         comboPagado.setSelectedIndex(-1);
     }
-
 
 
     public JTextField getTxtEmail() {
