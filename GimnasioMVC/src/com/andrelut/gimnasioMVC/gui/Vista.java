@@ -68,7 +68,7 @@ public class Vista extends JFrame {
         this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         this.pack();
         this.setVisible(true);
-        this.setSize(new Dimension(this.getWidth() + 200, this.getHeight()));
+        this.setSize(new Dimension(this.getWidth() + 320, this.getHeight() + 100));
         this.setLocationRelativeTo(null);
         optionDialog = new OptionDialog(this);
 

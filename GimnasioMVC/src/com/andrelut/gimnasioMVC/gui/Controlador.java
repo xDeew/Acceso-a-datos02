@@ -137,8 +137,7 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
         vista.itemConexion.addActionListener(listener);
         vista.itemSalir.addActionListener(listener);
         vista.btnValidate.addActionListener(listener);
-
-
+        vista.optionDialog.btnOpcionesGuardar.addActionListener(listener);
 
     }
 
@@ -149,7 +148,7 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
     @Override
     public void actionPerformed(ActionEvent e) {
         String command = e.getActionCommand();
-        List<String> comandosNoRequierenConexion = Arrays.asList("conectar", "salir");
+        List<String> comandosNoRequierenConexion = Arrays.asList("conectar", "salir", "abrirOpciones", "guardarOpciones");
         if (!comandosNoRequierenConexion.contains(command) && !modelo.estaConectado()) {
             JOptionPane.showMessageDialog(vista.frame, "Para poder realizar esta operación necesita estar conectado con la base de datos.", "Error de Conexión", JOptionPane.ERROR_MESSAGE);
             return;
@@ -219,18 +218,26 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
             case "eliminarCliente":
                 break;
             case "añadirSuscripcion":
+                if (hayCamposVaciosSuscripciones()) {
+                    JOptionPane.showMessageDialog(vista.frame, "Hay campos vacíos", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
                 LocalDate fechaInicio = vista.fechaInicio.getDate();
                 LocalDate fechaFin = vista.fechaFin.getDate();
                 boolean pagado = vista.comboPagado.getSelectedItem().toString().equals(EstadoPago.PAGADO.getValor());
                 String tipoSuscripcion = vista.comboTipoSuscripcion.getSelectedItem().toString();
                 double precio = Double.parseDouble(vista.txtPrecio.getText().replace(",", "."));
                 String nombreCliente = (String) vista.comboClientesRegistrados.getSelectedItem();
+                if (nombreCliente == null) {
+                    JOptionPane.showMessageDialog(vista.frame, "Cliente no seleccionado");
+                    return;
+                }
                 int idCliente = modelo.obtenerIdClientePorNombre(nombreCliente);
-
                 if (idCliente == -1) {
                     JOptionPane.showMessageDialog(vista.frame, "Cliente no encontrado");
                 } else if (modelo.tieneSuscripcionActiva(idCliente)) {
                     JOptionPane.showMessageDialog(vista.frame, "Este cliente ya tiene una suscripción activa");
+                    limpiarCamposSuscripciones();
                 } else {
                     modelo.insertarSuscripcion(fechaInicio, fechaFin, pagado, tipoSuscripcion, precio, idCliente);
                     JOptionPane.showMessageDialog(vista.frame, "Suscripción añadida correctamente");
@@ -299,6 +306,10 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
         }
     }
 
+    private boolean hayCamposVaciosSuscripciones() {
+        return vista.fechaInicio.getDate() == null || vista.fechaFin.getDate() == null || vista.comboPagado.getSelectedIndex() == -1 || vista.comboTipoSuscripcion.getSelectedIndex() == -1 || vista.txtPrecio.getText().isEmpty();
+    }
+
     private void setOptions() {
         vista.optionDialog.txtIP.setText(modelo.getIp());
         vista.optionDialog.txtUser.setText(modelo.getUser());
@@ -307,6 +318,7 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
     }
 
     private void limpiarCamposSuscripciones() {
+        vista.comboClientesRegistrados.setSelectedIndex(-1);
         vista.fechaInicio.clear();
         vista.fechaFin.clear();
         vista.comboPagado.setSelectedIndex(-1);
