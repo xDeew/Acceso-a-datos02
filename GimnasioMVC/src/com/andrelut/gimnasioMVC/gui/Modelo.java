@@ -60,11 +60,34 @@ public class Modelo {
         try {
             conexion = DriverManager.getConnection("jdbc:mysql://" + ip + ":3306/gimnasiodb", user, password);
             System.out.println("Conectado a la base de datos 'GimnasioDB'.");
+
             if (esNuevaBaseDeDatos) { // si es nueva base de datos (true), se ejecuta el script sql para crear las tablas
                 ejecutarScriptSQL(conexion, "src/bdgimnasio.sql");
+                //  ejecutarFuncionGanancias(conexion);
             }
         } catch (SQLException e) {
             System.out.println("Error al conectar con la base de datos: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private boolean ejecutarFuncionGanancias(Connection conn) {
+        String crearFuncionSql = "CREATE FUNCTION ganancias_por_cliente_add(num_clientes INT, tipo_suscripcion VARCHAR(50)) RETURNS DECIMAL(10, 2) BEGIN DECLARE ganancias DECIMAL(10, 2); IF tipo_suscripcion = 'básica' THEN SET ganancias = num_clientes * 20.00; ELSEIF tipo_suscripcion = 'premium' THEN SET ganancias = num_clientes * 35.00; ELSEIF tipo_suscripcion = 'familiar' THEN SET ganancias = num_clientes * 50.00; ELSEIF tipo_suscripcion = 'estudiante' THEN SET ganancias = num_clientes * 15.00; END IF; RETURN ganancias; END;";
+        try {
+            ejecutarSQL(conn, crearFuncionSql);
+            return true;
+        } catch (Exception e) {
+            System.out.println("Error al crear la función: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    private void ejecutarSQL(Connection conn, String sql) throws SQLException {
+        try (Statement stmt = conn.createStatement()) {
+            stmt.execute(sql);
+        } catch (SQLException e) {
+            System.out.println("Error al ejecutar SQL: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -106,49 +129,43 @@ public class Modelo {
         }
     }
 
-    private void ejecutarScriptSQL(Connection conn, String rutaScriptSQL) {
+    private void ejecutarScriptSQL(Connection conn, String rutaScriptSQL) throws SQLException {
         File archivoSQL = new File(rutaScriptSQL);
         if (!archivoSQL.exists()) {
             System.out.println("El archivo de script SQL no existe: " + rutaScriptSQL);
             return;
         }
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(archivoSQL));
-             Statement stmt = conn.createStatement()) {
-
+        try (BufferedReader reader = new BufferedReader(new FileReader(archivoSQL))) {
             String line;
-            StringBuilder sb = new StringBuilder();
-            boolean esBloqueFuncion = false;
+            StringBuilder comandoSQL = new StringBuilder();
+            String delimitadorActual = ";";
 
             while ((line = reader.readLine()) != null) {
                 if (line.startsWith("--") || line.trim().isEmpty()) {
                     continue;
                 }
 
-                // Comenzar o finalizar un bloque de función/procedimiento
-                if (line.startsWith("delimiter")) {
-                    esBloqueFuncion = true; // Cambia el estado si se encuentra 'delimiter'
-                    continue;
+                if (line.startsWith("delimiter") || line.startsWith("DELIMITER")) {
+                    delimitadorActual = line.split(" ")[1]; // el delimitador actual es ||
+                    continue; // evita que se añada esa linea actual al comandoSQL
                 }
 
-                if (esBloqueFuncion || line.endsWith(";")) {
-                    sb.append(line);
-                    if (!esBloqueFuncion) {
-                        // Ejecutar declaración SQL
-                        try {
-                            stmt.execute(sb.toString());
-                            sb = new StringBuilder();
-                        } catch (SQLException e) {
-                            System.out.println("Error al ejecutar el script SQL: " + e.getMessage());
-                            e.printStackTrace();
-                        }
+                comandoSQL.append(line);
+
+                if (line.endsWith(delimitadorActual)) {
+                    // convierto el StringBuilder a String y elimino el delimitador actual
+                    String comando = comandoSQL.toString().replaceAll("delimiter " + delimitadorActual, "");
+                    comando = comando.substring(0, comando.lastIndexOf(delimitadorActual)); // gracias al uso del substring, se elimina el delimitador actual y al uso de lastIndexOf, que devuelve la ultima ocurrencia del delimitador, se elimina el ultimo delimitador
+                    // elimino el ultimo delimitador porque todavia está presente en la cadena y jdbc no lo acepta
+                    try (Statement stmt = conn.createStatement()) {
+                        stmt.execute(comando);
                     }
-                } else {
-                    sb.append(line);
+                    comandoSQL = new StringBuilder();
                 }
             }
-        } catch (IOException | SQLException e) {
-            System.out.println("Error al ejecutar el script SQL: " + e.getMessage());
+        } catch (IOException e) {
+            System.out.println("Error al leer el archivo SQL: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -381,10 +398,17 @@ public class Modelo {
 
 
     public ResultSet consultarClientes() {
-        String consultaSQL = "SELECT * FROM Clientes";
+        String consultaSQL = "SELECT c.id_cliente as 'ID', " +
+                "c.nombre as 'Nombre', " +
+                "c.apellido as 'Apellido', " +
+                "c.fecha_nacimiento as 'Fecha de nacimiento', " +
+                "c.email as 'Email', " +
+                "c.telefono as 'Teléfono', " +
+                "c.direccion as 'Dirección' " +
+                "FROM Clientes c LEFT JOIN Suscripciones s ON c.id_cliente = s.id_cliente";
         try {
-            Statement stmt = conexion.createStatement();
-            ResultSet rs = stmt.executeQuery(consultaSQL);
+            PreparedStatement stmt = conexion.prepareStatement(consultaSQL);
+            ResultSet rs = stmt.executeQuery(); // No se pasa consultaSQL aquí
             return rs;
         } catch (SQLException e) {
             System.out.println("Error al consultar clientes: " + e.getMessage());
@@ -768,6 +792,30 @@ public class Modelo {
             System.out.println("Error al consultar equipamiento: " + e.getMessage());
             e.printStackTrace();
             return null;
+        }
+    }
+
+    public void modificarCliente(String nombre, String apellido, LocalDate fechaNacimiento, String email, String telefono, String direccion, int idCliente) {
+        String sentenciaSql = "UPDATE Clientes SET nombre = ?, apellido = ?, fecha_nacimiento = ?, email = ?, telefono = ?, direccion = ? WHERE id_cliente = ?";
+
+        try (PreparedStatement pstmt = conexion.prepareStatement(sentenciaSql)) {
+            pstmt.setString(1, nombre);
+            pstmt.setString(2, apellido);
+            pstmt.setDate(3, Date.valueOf(fechaNacimiento));
+            pstmt.setString(4, email);
+            pstmt.setString(5, telefono);
+            pstmt.setString(6, direccion);
+            pstmt.setInt(7, idCliente);
+
+            int filasAfectadas = pstmt.executeUpdate();
+            if (filasAfectadas > 0) {
+                System.out.println("Cliente modificado con éxito.");
+            } else {
+                System.out.println("No se pudo modificar el cliente.");
+            }
+        } catch (SQLException e) {
+            System.out.println("Error al modificar el cliente: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }

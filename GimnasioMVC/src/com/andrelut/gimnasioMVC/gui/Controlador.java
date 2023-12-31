@@ -32,10 +32,15 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
      * Constructor del controlador
      * <p>
      * - Conecta con la base de datos
+     * <p>
      * - Inicializa la fecha de hoy, que se usa para rellenar los campos de fecha de inicio y fin de suscripción
+     * <p>
      * - Fija las opciones de la ventana de opciones (IP, usuario, contraseña, contraseña de administrador)
+     * <p>
      * - Añade listeners a los botones y campos de texto
+     * <p>
      * - Refresca las tablas
+     * <p>
      * - Inicia el controlador
      *
      * @param modelo
@@ -67,7 +72,9 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
      * Inicia el controlador
      * <p>
      * - Añade un listener al campo de email para validar que sea un email válido
+     * <p>
      * - Añade un listener a la tabla de clientes para que cuando se seleccione una fila, se rellenen los campos con los datos de ese cliente
+     * <p>
      * - Añade un listener a los botones de añadir, modificar y eliminar cliente para que se realicen las operaciones correspondientes
      */
     private void iniciar() {
@@ -197,7 +204,7 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
     @Override
     public void actionPerformed(ActionEvent e) {
         String command = e.getActionCommand();
-        List<String> comandosNoRequierenConexion = Arrays.asList("conectar", "salir", "abrirOpciones", "guardarOpciones");
+        List<String> comandosNoRequierenConexion = Arrays.asList("conectar", "salir", "abrirOpciones", "guardarOpciones", "opciones");
         if (!comandosNoRequierenConexion.contains(command) && !modelo.estaConectado()) {
             JOptionPane.showMessageDialog(vista.frame, "Para poder realizar esta operación necesita estar conectado con la base de datos.", "Error de Conexión", JOptionPane.ERROR_MESSAGE);
             return;
@@ -243,12 +250,11 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
                 break;
 
             case "añadirCliente":
-                if (hayCamposVaciosCliente())
-                    Util.showErrorAlert("Rellene todos los campos");
+                if (hayCamposVaciosCliente()) Util.showErrorAlert("Rellene todos los campos");
 
                 else if (!vista.getTxtEmail().getForeground().equals(new Color(0, 100, 0))) {
                     JOptionPane.showMessageDialog(vista.frame, "Email no válido", "Error", JOptionPane.ERROR_MESSAGE);
-                } else if (vista.getTxtTelefono().getText().length() != 9) {
+                } else if (vista.getTxtTelefono().getText().replace(" ", "").length() != 9) {
                     JOptionPane.showMessageDialog(vista.frame, "Teléfono no válido, ha de tener un máximo de 9 dígitos", "Error", JOptionPane.ERROR_MESSAGE);
                 } else if (modelo.existeEmail(vista.txtEmail.getText())) {
                     JOptionPane.showMessageDialog(vista.frame, "Email ya registrado", "Error", JOptionPane.ERROR_MESSAGE);
@@ -262,6 +268,25 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
                 }
                 break;
             case "modificarCliente":
+                if (hayCamposVaciosCliente()) {
+                    Util.showErrorAlert("Rellene todos los campos");
+                    vista.clientesTabla.clearSelection();
+                } else {
+                    int selectedRow = vista.clientesTabla.getSelectedRow();
+                    if (selectedRow != -1) {
+                        int idCliente = Integer.parseInt(vista.clientesTabla.getValueAt(selectedRow, 0).toString());
+                        modelo.modificarCliente(vista.txtNombre.getText(),
+                                vista.txtApellido.getText(),
+                                vista.fechaNacimiento.getDate(),
+                                vista.txtEmail.getText(),
+                                vista.txtTelefono.getText(),
+                                vista.txtDireccion.getText(), idCliente);
+                        limpiarCamposClientes();
+                        refrescarClientes();
+                    } else {
+                        JOptionPane.showMessageDialog(vista.frame, "Por favor, seleccione un cliente de la tabla antes de modificar.", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
                 break;
             case "eliminarCliente":
                 break;
@@ -337,7 +362,6 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
                     }
 
                 }
-
                 break;
             case "modificarClase":
                 break;
@@ -360,16 +384,24 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
                     JOptionPane.showMessageDialog(vista.frame, "Entrenador añadido correctamente");
                     refrescarEntrenadores();
                 }
-
-
                 break;
             case "modificarEntrenador":
                 break;
             case "eliminarEntrenador":
                 break;
             case "añadirEquipamiento":
-                modelo.insertarEquipamiento(vista.comboEquipamiento.getSelectedItem().toString(), vista.txtMarcaEquipamiento.getText(), vista.fechaCompraEquipamiento.getDate(), Double.parseDouble(vista.txtCostoEquipamiento.getText().replace(",", ".")), vista.comboEstadoEquipamiento.getSelectedItem().toString());
-                refrescarEquipamiento();
+                if (hayCamposVaciosEquipamiento()) {
+                    Util.showErrorAlert("Rellene todos los campos");
+                    return;
+                } else if (modelo.existeEquipamiento(vista.comboEquipamiento.getSelectedItem().toString())) {
+                    JOptionPane.showMessageDialog(vista.frame, "Este equipamiento ya está registrado");
+                    return;
+                } else {
+                    modelo.insertarEquipamiento(vista.comboEquipamiento.getSelectedItem().toString(), vista.txtMarcaEquipamiento.getText(), vista.fechaCompraEquipamiento.getDate(), Double.parseDouble(vista.txtCostoEquipamiento.getText().replace(",", ".")), vista.comboEstadoEquipamiento.getSelectedItem().toString());
+                    limpiarCamposEquipamiento();
+                    refrescarEquipamiento();
+                }
+
                 break;
             case "modificarEquipamiento":
                 break;
@@ -403,6 +435,22 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
                 break;
 
         }
+    }
+
+    private boolean existeCliente() {
+        return modelo.obtenerIdClientePorNombre(vista.txtNombre.getText() + " " + vista.txtApellido.getText()) == -1;
+    }
+
+    private void limpiarCamposEquipamiento() {
+        vista.comboEquipamiento.setSelectedIndex(-1);
+        vista.txtMarcaEquipamiento.setText("");
+        vista.fechaCompraEquipamiento.setDate(null);
+        vista.txtCostoEquipamiento.setText("");
+        vista.comboEstadoEquipamiento.setSelectedIndex(-1);
+    }
+
+    private boolean hayCamposVaciosEquipamiento() {
+        return vista.comboEquipamiento.getSelectedIndex() == -1 || vista.txtMarcaEquipamiento.getText().isEmpty() || vista.fechaCompraEquipamiento.getDate() == null || vista.txtCostoEquipamiento.getText().isEmpty() || vista.comboEstadoEquipamiento.getSelectedIndex() == -1;
     }
 
     private void limpiarCamposClases() {

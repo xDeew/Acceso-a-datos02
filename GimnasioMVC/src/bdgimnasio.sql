@@ -9,7 +9,6 @@ create table clientes
     direccion        varchar(100)
 );
 
--- creación de la tabla suscripciones
 create table suscripciones
 (
     id_suscripcion int primary key auto_increment,
@@ -18,11 +17,12 @@ create table suscripciones
     fecha_fin      date,
     tipo           varchar(50),
     precio         decimal(10, 2),
-    estado_pago    boolean,
-    foreign key (id_cliente) references clientes (id_cliente)
+    estado_pago    boolean
 );
 
--- creación de la tabla entrenadores
+alter table suscripciones
+    add foreign key (id_cliente) references clientes (id_cliente);
+
 create table entrenadores
 (
     id_entrenador      int primary key auto_increment,
@@ -32,7 +32,6 @@ create table entrenadores
     salario            decimal(10, 2)
 );
 
--- creación de la tabla equipamiento relacionada con la tabla mantenimientos
 create table equipamiento
 (
     id_equipamiento int primary key auto_increment,
@@ -43,7 +42,6 @@ create table equipamiento
     estado          varchar(50)
 );
 
--- creación de la tabla clases relacionada con la tabla entrenadores
 create table clases
 (
     id_clase           int primary key auto_increment,
@@ -53,10 +51,12 @@ create table clases
     instructor         varchar(50),
     material_utilizado varchar(255),
     id_entrenador      int,
-    id_equipamiento    int,
-    foreign key (id_entrenador) references entrenadores (id_entrenador),
-    foreign key (id_equipamiento) references equipamiento (id_equipamiento)
+    id_equipamiento    int
 );
+
+alter table clases
+    add foreign key (id_entrenador) references entrenadores (id_entrenador),
+    add foreign key (id_equipamiento) references equipamiento (id_equipamiento);
 
 delimiter ||
 create function ganancias_por_cliente_add(num_clientes int, tipo_suscripcion varchar(50))
@@ -73,6 +73,5 @@ begin
         set ganancias = num_clientes * 15.00;
     end if;
     return ganancias;
-end;
-||
+end; ||
 delimiter ;
