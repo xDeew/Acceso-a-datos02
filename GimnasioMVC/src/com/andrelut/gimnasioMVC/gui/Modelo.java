@@ -1,5 +1,7 @@
 package com.andrelut.gimnasioMVC.gui;
 
+import com.andrelut.gimnasioMVC.enums.TipoClase;
+import com.andrelut.gimnasioMVC.enums.TipoEquipamiento;
 import com.andrelut.gimnasioMVC.enums.TipoSuscripcion;
 
 import java.io.*;
@@ -225,7 +227,6 @@ public class Modelo {
         return nombresClientes;
     }
 
-    // Métodos para operar con la tabla Clientes
     public void insertarCliente(String nombre, String apellido, LocalDate fechaNacimiento, String email, String telefono, String direccion) {
         String sentenciaSql = "INSERT INTO Clientes (nombre, apellido, fecha_nacimiento, email, telefono, direccion) VALUES (?, ?, ?, ?, ?, ?)";
 
@@ -419,7 +420,7 @@ public class Modelo {
         double ganancias = 0.0;
         String sql = "{ ? = call ganancias_por_cliente_add(?, ?) }";
         try (CallableStatement stmt = conexion.prepareCall(sql)) {
-            stmt.registerOutParameter(1, Types.DOUBLE); // registramos el parametro de retorno
+            stmt.registerOutParameter(1, Types.DOUBLE); // registramos el parametro de retorno, se utiliza para obtener el resultado de la funcion
             stmt.setInt(2, numClientes);
             stmt.setString(3, tipoSuscripcion);
             stmt.execute(); // despues de ejecutar la funcion, el valor de retorno queda en el primer parametro
@@ -456,6 +457,315 @@ public class Modelo {
             return rs;
         } catch (SQLException e) {
             System.out.println("Error al consultar suscripciones: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public int obtenerCapacidadPorTipoClase(String tipoSeleccionado) {
+
+        switch (tipoSeleccionado) {
+            case "Aerobico":
+                return TipoClase.AEROBICO.getCapacidad();
+            case "Musculacion":
+                return TipoClase.MUSCULACION.getCapacidad();
+            case "Crossfit":
+                return TipoClase.CROSSFIT.getCapacidad();
+            case "Yoga":
+                return TipoClase.YOGA.getCapacidad();
+            case "Pilates":
+                return TipoClase.PILATES.getCapacidad();
+            case "Zumba":
+                return TipoClase.ZUMBA.getCapacidad();
+            case "Gimnasia":
+                return TipoClase.GIMNASIA.getCapacidad();
+            case "Spinning":
+                return TipoClase.SPINNING.getCapacidad();
+            default:
+                return 0;
+        }
+    }
+
+    public int obtenerDuracionPorTipoClase(String tipoSeleccionado) {
+        switch (tipoSeleccionado) {
+            case "Aerobico":
+                return TipoClase.AEROBICO.getDuracion();
+            case "Musculacion":
+                return TipoClase.MUSCULACION.getDuracion();
+            case "Crossfit":
+                return TipoClase.CROSSFIT.getDuracion();
+            case "Yoga":
+                return TipoClase.YOGA.getDuracion();
+            case "Pilates":
+                return TipoClase.PILATES.getDuracion();
+            case "Zumba":
+                return TipoClase.ZUMBA.getDuracion();
+            case "Gimnasia":
+                return TipoClase.GIMNASIA.getDuracion();
+            case "Spinning":
+                return TipoClase.SPINNING.getDuracion();
+            default:
+                return 0;
+
+        }
+    }
+
+    public void insertarEntrenador(String nombreEntrenador, String especialidad, LocalDate fechaContratacionEntrenador, double salario) {
+        String sentenciaSql = "INSERT INTO Entrenadores (nombre, especialidad, fecha_contratacion, salario) VALUES (?, ?, ?, ?)";
+
+        try (PreparedStatement pstmt = conexion.prepareStatement(sentenciaSql)) {
+            pstmt.setString(1, nombreEntrenador);
+            pstmt.setString(2, especialidad);
+            pstmt.setDate(3, Date.valueOf(fechaContratacionEntrenador));
+            pstmt.setDouble(4, salario);
+
+            int filasAfectadas = pstmt.executeUpdate();
+            if (filasAfectadas > 0) {
+                System.out.println("Entrenador insertado con éxito.");
+            } else {
+                System.out.println("No se pudo insertar el entrenador.");
+            }
+        } catch (SQLException e) {
+            System.out.println("Error al insertar el entrenador: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    public ResultSet consultarEntrenadores() {
+        String consultaSQL = "SELECT * FROM Entrenadores";
+        try {
+            Statement stmt = conexion.createStatement();
+            ResultSet rs = stmt.executeQuery(consultaSQL);
+            return rs;
+        } catch (SQLException e) {
+            System.out.println("Error al consultar entrenadores: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public String obtenerEntrenadorPorTipoClase(String tipoClaseSeleccionado) {
+        String consultaSQL = "SELECT nombre FROM Entrenadores WHERE especialidad = ?";
+
+        if (tipoClaseSeleccionado.equals("Aerobico")) {
+            tipoClaseSeleccionado = TipoClase.AEROBICO.getNombre();
+        } else if (tipoClaseSeleccionado.equals("Musculacion")) {
+            tipoClaseSeleccionado = TipoClase.MUSCULACION.getNombre();
+        } else if (tipoClaseSeleccionado.equals("Crossfit")) {
+            tipoClaseSeleccionado = TipoClase.CROSSFIT.getNombre();
+        } else if (tipoClaseSeleccionado.equals("Yoga")) {
+            tipoClaseSeleccionado = TipoClase.YOGA.getNombre();
+        } else if (tipoClaseSeleccionado.equals("Pilates")) {
+            tipoClaseSeleccionado = TipoClase.PILATES.getNombre();
+        } else if (tipoClaseSeleccionado.equals("Zumba")) {
+            tipoClaseSeleccionado = TipoClase.ZUMBA.getNombre();
+        } else if (tipoClaseSeleccionado.equals("Gimnasia")) {
+            tipoClaseSeleccionado = TipoClase.GIMNASIA.getNombre();
+        } else if (tipoClaseSeleccionado.equals("Spinning")) {
+            tipoClaseSeleccionado = TipoClase.SPINNING.getNombre();
+        }
+
+        try (PreparedStatement pstmt = conexion.prepareStatement(consultaSQL)) {
+            pstmt.setString(1, tipoClaseSeleccionado);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("nombre");
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error al obtener el entrenador: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    public boolean existeEntrenadorEnClase(String especialidad) {
+        String consultaSQL = "SELECT COUNT(*) FROM entrenadores WHERE especialidad = ?";
+
+        try (PreparedStatement pstmt = conexion.prepareStatement(consultaSQL)) {
+            pstmt.setString(1, especialidad);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error al verificar si existe un entrenador en la clase: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    public ResultSet consultarClases() {
+        String consultaSQL = "SELECT * FROM Clases";
+        try {
+            Statement stmt = conexion.createStatement();
+            ResultSet rs = stmt.executeQuery(consultaSQL);
+            return rs;
+        } catch (SQLException e) {
+            System.out.println("Error al consultar clases: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public int obtenerIdEntrenadorPorNombre(String nombreEntrenadorClase) {
+        String consultaSQL = "SELECT id_entrenador FROM Entrenadores WHERE nombre = ?";
+
+        try (PreparedStatement pstmt = conexion.prepareStatement(consultaSQL)) {
+            pstmt.setString(1, nombreEntrenadorClase);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("id_entrenador");
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error al obtener el ID del entrenador: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return -1;
+    }
+
+    public void insertarClase(String tipoClase, int capacidadMaxima, Time duracion, String nombreInstructor, String materialUtilizado, int idEntrenador, int idEquipamiento) throws SQLException {
+        String sentenciaSql = "INSERT INTO Clases (tipo, capacidad_maxima, duracion, instructor, material_utilizado, id_entrenador, id_equipamiento) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        try (PreparedStatement pstmt = conexion.prepareStatement(sentenciaSql)) {
+            pstmt.setString(1, tipoClase);
+            pstmt.setInt(2, capacidadMaxima);
+            pstmt.setTime(3, duracion);
+            pstmt.setString(4, nombreInstructor);
+            pstmt.setString(5, materialUtilizado);
+            pstmt.setInt(6, idEntrenador);
+            pstmt.setInt(7, idEquipamiento);
+
+            int filasAfectadas = pstmt.executeUpdate();
+            if (filasAfectadas > 0) {
+                System.out.println("Clase insertada con éxito.");
+            } else {
+                System.out.println("No se pudo insertar la clase.");
+            }
+        } catch (SQLException e) {
+            System.out.println("Error al insertar la clase: " + e.getMessage());
+            throw e;
+        }
+    }
+
+    public boolean existeClaseAsignada(String tipoClase) {
+        String consultaSQL = "SELECT COUNT(*) FROM Clases WHERE tipo = ?";
+
+        try (PreparedStatement pstmt = conexion.prepareStatement(consultaSQL)) {
+            pstmt.setString(1, tipoClase);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0; // si el conteo es mayor que cero, la clase ya existe
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error al verificar si existe una clase asignada: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    public String obtenerMaterialPorTipoClase(String tipoClase) {
+        for (TipoClase clase : TipoClase.values()) {
+            if (clase.name().equalsIgnoreCase(tipoClase)) { // clase.name coge el valor exacto de la clase, por ejemplo: AEROBICO
+                TipoEquipamiento equipamiento = clase.getEquipamiento();
+                if (existeEquipamiento(equipamiento.getDescripcion())) {
+                    return equipamiento.getDescripcion();
+                }
+                break;
+            }
+        }
+        return "";
+    }
+
+
+    public int obtenerIdEquipamientoPorTipoClase(String tipoClase) {
+        String tipoEquipamiento = obtenerTipoEquipamientoParaClase(tipoClase);
+
+        String consultaSQL = "SELECT id_equipamiento FROM equipamiento WHERE tipo = ?";
+
+        try (PreparedStatement pstmt = conexion.prepareStatement(consultaSQL)) {
+            pstmt.setString(1, tipoEquipamiento);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("id_equipamiento");
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error al obtener el ID del equipamiento: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return -1;
+    }
+
+    private String obtenerTipoEquipamientoParaClase(String tipoClase) {
+        for (TipoClase clase : TipoClase.values()) {
+            if (clase.name().equalsIgnoreCase(tipoClase)) {
+                return clase.getEquipamiento().getDescripcion();
+            }
+        }
+        return "";
+    }
+
+
+    public boolean existeEquipamiento(String tipoEquipamiento) {
+        Connection conn = conexion;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        boolean existe = false;
+
+        try {
+            String query = "SELECT COUNT(*) FROM equipamiento WHERE tipo = ?";
+            stmt = conn.prepareStatement(query);
+            stmt.setString(1, tipoEquipamiento);
+            rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                existe = rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return existe;
+    }
+
+    public void insertarEquipamiento(String tipo, String marca, LocalDate fechaCompra, double costo, String estado) {
+        String sentenciaSql = "INSERT INTO Equipamiento (tipo, marca, fecha_compra, costo, estado) VALUES (?, ?, ?, ?, ?)";
+
+        try (PreparedStatement pstmt = conexion.prepareStatement(sentenciaSql)) {
+            pstmt.setString(1, tipo);
+            pstmt.setString(2, marca);
+            pstmt.setDate(3, Date.valueOf(fechaCompra));
+            pstmt.setDouble(4, costo);
+            pstmt.setString(5, estado);
+
+            int filasAfectadas = pstmt.executeUpdate();
+            if (filasAfectadas > 0) {
+                System.out.println("Equipamiento insertado con éxito.");
+            } else {
+                System.out.println("No se pudo insertar el equipamiento.");
+            }
+        } catch (SQLException e) {
+            System.out.println("Error al insertar el equipamiento: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    public ResultSet consultarEquipamiento() {
+        String consultaSQL = "SELECT * FROM Equipamiento";
+        try {
+            Statement stmt = conexion.createStatement();
+            ResultSet rs = stmt.executeQuery(consultaSQL);
+            return rs;
+        } catch (SQLException e) {
+            System.out.println("Error al consultar equipamiento: " + e.getMessage());
             e.printStackTrace();
             return null;
         }

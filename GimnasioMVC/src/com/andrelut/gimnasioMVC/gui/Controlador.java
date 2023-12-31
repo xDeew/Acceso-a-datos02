@@ -11,11 +11,9 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.*;
-import java.sql.Date;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
+import java.sql.*;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +28,19 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
     private final LocalDate fechaHoy;
     boolean refrescar;
 
-
+    /**
+     * Constructor del controlador
+     * <p>
+     * - Conecta con la base de datos
+     * - Inicializa la fecha de hoy, que se usa para rellenar los campos de fecha de inicio y fin de suscripción
+     * - Fija las opciones de la ventana de opciones (IP, usuario, contraseña, contraseña de administrador)
+     * - Añade listeners a los botones y campos de texto
+     * - Refresca las tablas
+     * - Inicia el controlador
+     *
+     * @param modelo
+     * @param vista
+     */
     public Controlador(Modelo modelo, Vista vista) {
         this.modelo = modelo;
         this.vista = vista;
@@ -41,7 +51,7 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
         addItemListeners(this);
         addWindowListeners(this);
         refrescarTodo();
-        iniciarControlador();
+        iniciar();
 
 
     }
@@ -53,8 +63,15 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
         vista.fechaFin.setDate(fechaFin);
     }
 
-
-    private void iniciarControlador() {
+    /**
+     * Inicia el controlador
+     * <p>
+     * - Añade un listener al campo de email para validar que sea un email válido
+     * - Añade un listener a la tabla de clientes para que cuando se seleccione una fila, se rellenen los campos con los datos de ese cliente
+     * - Añade un listener a los botones de añadir, modificar y eliminar cliente para que se realicen las operaciones correspondientes
+     */
+    private void iniciar() {
+        // es útil para validar o procesar el texto mientras el usuario lo está escribiendo
         DocumentListener validadorEmail = new DocumentListener() {
             public void changedUpdate(DocumentEvent e) {
                 validarEmail();
@@ -86,8 +103,7 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
                     vista.txtTelefono.setText(String.valueOf(vista.clientesTabla.getValueAt(row, 5)));
                     vista.txtDireccion.setText(String.valueOf(vista.clientesTabla.getValueAt(row, 6)));
 
-                } else if (e.getValueIsAdjusting()
-                        && ((ListSelectionModel) e.getSource()).isSelectionEmpty() && !refrescar) {
+                } else if (e.getValueIsAdjusting() && ((ListSelectionModel) e.getSource()).isSelectionEmpty() && !refrescar) {
                     if (e.getSource().equals(vista.clientesTabla.getSelectionModel())) {
                         limpiarCamposClientes();
                     }
@@ -98,7 +114,11 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
         });
     }
 
-
+    /**
+     * Valida que el email introducido sea válido
+     * <p>
+     * Si el email contiene un @ y un ., el texto se pone en verde, si no, en rojo
+     */
     private void validarEmail() {
         String email = vista.getTxtEmail().getText();
         if (email.contains("@") && email.contains(".")) {
@@ -123,6 +143,30 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
             }
         });
 
+        vista.txtAforoMaximo.setEditable(false);
+        vista.txtDuracionClase.setEditable(false);
+        vista.txtMaterialUtilizado.setEditable(false);
+        vista.txtInstructorAsignado.setEditable(false);
+
+        vista.comboTiposClases.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if (e.getStateChange() == ItemEvent.SELECTED) {
+                    String tipoClaseSeleccionado = (String) e.getItem();
+
+                    int capacidad = modelo.obtenerCapacidadPorTipoClase(tipoClaseSeleccionado);
+                    int duracion = modelo.obtenerDuracionPorTipoClase(tipoClaseSeleccionado);
+                    String nombreEntrenador = modelo.obtenerEntrenadorPorTipoClase(tipoClaseSeleccionado);
+                    String material = modelo.obtenerMaterialPorTipoClase(tipoClaseSeleccionado);
+
+                    vista.txtAforoMaximo.setText(String.valueOf(capacidad));
+                    vista.txtDuracionClase.setText(String.valueOf(duracion));
+                    vista.txtInstructorAsignado.setText(nombreEntrenador);
+                    vista.txtMaterialUtilizado.setText(material);
+                }
+            }
+        });
+
     }
 
     private void addActionListeners(ActionListener listener) {
@@ -138,6 +182,11 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
         vista.itemSalir.addActionListener(listener);
         vista.btnValidate.addActionListener(listener);
         vista.optionDialog.btnOpcionesGuardar.addActionListener(listener);
+        vista.btnAddEntrenador.addActionListener(listener);
+        vista.btnModificarEntrenador.addActionListener(listener);
+        vista.btnEliminarEntrenador.addActionListener(listener);
+        vista.btnAddClase.addActionListener(listener);
+        vista.btnAddEquipamiento.addActionListener(listener);
 
     }
 
@@ -187,16 +236,15 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
                 }
                 break;
             case "guardarOpciones":
-                modelo.setPropValues(vista.optionDialog.txtIP.getText(), vista.optionDialog.txtUser.getText(),
-                        String.valueOf(vista.optionDialog.pfPass.getPassword()), String.valueOf(vista.optionDialog.pfAdmin.getPassword()));
+                modelo.setPropValues(vista.optionDialog.txtIP.getText(), vista.optionDialog.txtUser.getText(), String.valueOf(vista.optionDialog.pfPass.getPassword()), String.valueOf(vista.optionDialog.pfAdmin.getPassword()));
                 vista.optionDialog.dispose();
                 vista.dispose();
                 new Controlador(new Modelo(), new Vista());
                 break;
 
             case "añadirCliente":
-                if (hayCamposVacios())
-                    JOptionPane.showMessageDialog(vista.frame, "Hay campos vacíos", "Error", JOptionPane.ERROR_MESSAGE);
+                if (hayCamposVaciosCliente())
+                    Util.showErrorAlert("Rellene todos los campos");
 
                 else if (!vista.getTxtEmail().getForeground().equals(new Color(0, 100, 0))) {
                     JOptionPane.showMessageDialog(vista.frame, "Email no válido", "Error", JOptionPane.ERROR_MESSAGE);
@@ -219,7 +267,7 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
                 break;
             case "añadirSuscripcion":
                 if (hayCamposVaciosSuscripciones()) {
-                    JOptionPane.showMessageDialog(vista.frame, "Hay campos vacíos", "Error", JOptionPane.ERROR_MESSAGE);
+                    Util.showErrorAlert("Rellene todos los campos");
                     return;
                 }
                 LocalDate fechaInicio = vista.fechaInicio.getDate();
@@ -251,18 +299,77 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
             case "eliminarSuscripcion":
                 break;
             case "añadirClase":
+                if (hayCamposVaciosClases()) {
+                    Util.showErrorAlert("Rellene todos los campos");
+                    return;
+                } else if (vista.txtInstructorAsignado.getText().isEmpty()) {
+                    JOptionPane.showMessageDialog(vista.frame, "No hay entrenador asignado", "Error", JOptionPane.ERROR_MESSAGE);
+                    limpiarCamposClases();
+                } else if (vista.txtMaterialUtilizado.getText().isEmpty()) {
+                    JOptionPane.showMessageDialog(vista.frame, "No hay material asignado", "Error", JOptionPane.ERROR_MESSAGE);
+                    limpiarCamposClases();
+                } else {
+                    String tipoClase = vista.comboTiposClases.getSelectedItem().toString();
+                    int aforoMaximo = Integer.parseInt(vista.txtAforoMaximo.getText());
+                    int minutos = Integer.parseInt(vista.txtDuracionClase.getText());
+                    Time duracion = Time.valueOf(LocalTime.MIN.plusMinutes(minutos));
+                    String nombreEntrenadorClase = vista.txtInstructorAsignado.getText();
+                    String materialUtilizado = vista.txtMaterialUtilizado.getText();
+                    int idEntrenador = modelo.obtenerIdEntrenadorPorNombre(nombreEntrenadorClase);
+                    int idEquipamiento = modelo.obtenerIdEquipamientoPorTipoClase(tipoClase);
+
+
+                    if (idEntrenador == -1) {
+                        JOptionPane.showMessageDialog(vista.frame, "Entrenador no encontrado");
+                        return;
+                    } else if (modelo.existeClaseAsignada(tipoClase)) {
+                        JOptionPane.showMessageDialog(vista.frame, "Este entrenador ya tiene una clase asignada");
+                        return;
+                    } else {
+                        try {
+                            modelo.insertarClase(tipoClase, aforoMaximo, duracion, nombreEntrenadorClase, materialUtilizado, idEntrenador, idEquipamiento);
+                        } catch (SQLException ex) {
+                            ex.printStackTrace();
+                        }
+                        JOptionPane.showMessageDialog(vista.frame, "Clase añadida correctamente");
+                        limpiarCamposClases();
+                        refrescarClases();
+                    }
+
+                }
+
                 break;
             case "modificarClase":
                 break;
             case "eliminarClase":
                 break;
             case "añadirEntrenador":
+                if (hayCamposVaciosEntrenador()) {
+                    Util.showErrorAlert("Rellene todos los campos");
+                    return;
+                }
+                String nombreEntrenador = vista.txtNombreEntrenador.getText();
+                String especialidad = vista.comboEspecialidadEntrenador.getSelectedItem().toString();
+                LocalDate fechaContratacionEntrenador = vista.fechaContratacion.getDate();
+                double salario = Double.parseDouble(vista.txtSalario.getText().replace(",", "."));
+                if (modelo.existeEntrenadorEnClase(especialidad)) {
+                    JOptionPane.showMessageDialog(vista.frame, "Esta clase ya tiene entrenador asignado");
+                    return;
+                } else {
+                    modelo.insertarEntrenador(nombreEntrenador, especialidad, fechaContratacionEntrenador, salario);
+                    JOptionPane.showMessageDialog(vista.frame, "Entrenador añadido correctamente");
+                    refrescarEntrenadores();
+                }
+
+
                 break;
             case "modificarEntrenador":
                 break;
             case "eliminarEntrenador":
                 break;
             case "añadirEquipamiento":
+                modelo.insertarEquipamiento(vista.comboEquipamiento.getSelectedItem().toString(), vista.txtMarcaEquipamiento.getText(), vista.fechaCompraEquipamiento.getDate(), Double.parseDouble(vista.txtCostoEquipamiento.getText().replace(",", ".")), vista.comboEstadoEquipamiento.getSelectedItem().toString());
+                refrescarEquipamiento();
                 break;
             case "modificarEquipamiento":
                 break;
@@ -291,19 +398,27 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
                 if (gananciasTotales == 0.0 && gananciasEnEspera == 0.0) {
                     JOptionPane.showMessageDialog(vista.frame, "No hay suscripciones");
                 } else {
-                    JOptionPane.showMessageDialog(
-                            vista.frame,
-                            "<html><body><p style='width: 200px;'>" +
-                                    "Las ganancias mensuales actuales ascienden a: <b>" + String.format("%.2f", gananciasTotales) + "</b> euros." +
-                                    "<br><br>Adicionalmente, las ganancias correspondientes a las suscripciones pendientes de pago suman: <b>" + String.format("%.2f", gananciasEnEspera) + "</b> euros." +
-                                    "</p></body></html>",
-                            "Informe de Ganancias",
-                            JOptionPane.INFORMATION_MESSAGE
-                    );
+                    JOptionPane.showMessageDialog(vista.frame, "<html><body><p style='width: 200px;'>" + "Las ganancias mensuales actuales ascienden a: <b>" + String.format("%.2f", gananciasTotales) + "</b> euros." + "<br><br>Adicionalmente, las ganancias correspondientes a las suscripciones pendientes de pago suman: <b>" + String.format("%.2f", gananciasEnEspera) + "</b> euros." + "</p></body></html>", "Informe de Ganancias", JOptionPane.INFORMATION_MESSAGE);
                 }
                 break;
 
         }
+    }
+
+    private void limpiarCamposClases() {
+        vista.comboTiposClases.setSelectedIndex(-1);
+        vista.txtAforoMaximo.setText("");
+        vista.txtDuracionClase.setText("");
+        vista.txtInstructorAsignado.setText("");
+        vista.txtMaterialUtilizado.setText("");
+    }
+
+    private boolean hayCamposVaciosClases() {
+        return vista.comboTiposClases.getSelectedIndex() == -1 || vista.txtAforoMaximo.getText().isEmpty() || vista.txtDuracionClase.getText().isEmpty();
+    }
+
+    private boolean hayCamposVaciosEntrenador() {
+        return vista.txtNombreEntrenador.getText().isEmpty() || vista.comboEspecialidadEntrenador.getSelectedIndex() == -1 || vista.fechaContratacion.getDate() == null || vista.txtSalario.getText().isEmpty();
     }
 
     private boolean hayCamposVaciosSuscripciones() {
@@ -338,7 +453,7 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
         vista.fechaFin.clear();
     }
 
-    private boolean hayCamposVacios() {
+    private boolean hayCamposVaciosCliente() {
         return vista.txtNombre.getText().isEmpty() || vista.txtApellido.getText().isEmpty() || vista.txtEmail.getText().isEmpty() || vista.txtTelefono.getText().isEmpty() || vista.txtDireccion.getText().isEmpty();
     }
 
@@ -366,7 +481,6 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
             } else {
                 String clienteSeleccionado = (String) vista.comboClientesRegistrados.getSelectedItem();
 
-                // Un cliente ha sido seleccionado, obtén y muestra sus datos
                 Map<String, Object> datosCliente = modelo.obtenerDatosCliente(clienteSeleccionado);
                 vista.txtNombre.setText((String) datosCliente.get("nombre"));
                 vista.txtApellido.setText((String) datosCliente.get("apellido"));
@@ -375,7 +489,6 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
                 vista.fechaNacimiento.setDate((LocalDate) datosCliente.get("fecha_nacimiento"));
                 vista.txtDireccion.setText((String) datosCliente.get("direccion"));
 
-                // configura las fechas de inicio y fin
                 actualizarFechaInicioFin();
 
             }
@@ -401,12 +514,39 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
-
     }
 
-    private DefaultTableModel construirTableModelSuscripciones(ResultSet rs) throws SQLException {
-        // Obtiene los metadatos de la consulta
+    public void refrescarEntrenadores() {
+        try {
+            ResultSet rs = modelo.consultarEntrenadores();
+            vista.dtmEntrenadores = construirTableModelEntrenadores(rs);
+            vista.entrenadoresTabla.setModel(vista.dtmEntrenadores);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void refrescarClases() {
+        try {
+            ResultSet rs = modelo.consultarClases();
+            vista.dtmClases = construirTableModelClases(rs);
+            vista.clasesTabla.setModel(vista.dtmClases);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void refrescarEquipamiento() {
+        try {
+            ResultSet rs = modelo.consultarEquipamiento();
+            vista.dtmEquipamiento = construirTableModelEquipamiento(rs);
+            vista.equipamientoTabla.setModel(vista.dtmEquipamiento);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private DefaultTableModel construirTableModelEquipamiento(ResultSet rs) throws SQLException {
         ResultSetMetaData metaData = null;
         try {
             metaData = rs.getMetaData();
@@ -414,7 +554,33 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
             e.printStackTrace();
         }
 
-        // Nombres de las columnas
+        Vector<String> columnNames = new java.util.Vector<String>();
+        int columnCount = 0;
+        try {
+            columnCount = metaData.getColumnCount();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        for (int column = 1; column <= columnCount; column++) {
+            columnNames.add(metaData.getColumnName(column));
+        }
+        Vector<Vector<Object>> data = new Vector<Vector<Object>>();
+        setDataVector(rs, columnCount, data);
+
+        vista.dtmEquipamiento.setDataVector(data, columnNames);
+
+        return vista.dtmEquipamiento;
+
+    }
+
+    private DefaultTableModel construirTableModelSuscripciones(ResultSet rs) throws SQLException {
+        ResultSetMetaData metaData = null;
+        try {
+            metaData = rs.getMetaData();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
         Vector<String> columnNames = new java.util.Vector<String>();
         int columnCount = 0;
         try {
@@ -426,7 +592,6 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
             columnNames.add(metaData.getColumnName(column));
         }
 
-        // Datos de la tabla
         Vector<Vector<Object>> data = new Vector<Vector<Object>>();
         setDataVector(rs, columnCount, data);
 
@@ -439,23 +604,41 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
         actualizarListaClientes();
         refrescarClientes();
         refrescarSuscripciones();
+        refrescarEntrenadores();
+        refrescarClases();
+        refrescarEquipamiento();
         refrescar = false;
 
     }
 
-    private DefaultTableModel construirTableModelClientes(ResultSet rs) throws SQLException {
-
-        // Obtiene los metadatos de la consulta
+    private DefaultTableModel construirTableModelEntrenadores(ResultSet rs) throws SQLException {
         ResultSetMetaData metaData = rs.getMetaData();
 
-        // Nombres de las columnas
         Vector<String> columnNames = new java.util.Vector<String>();
         int columnCount = metaData.getColumnCount();
         for (int column = 1; column <= columnCount; column++) {
             columnNames.add(metaData.getColumnName(column));
         }
 
-        // Datos de la tabla
+        Vector<Vector<Object>> data = new Vector<Vector<Object>>();
+        setDataVector(rs, columnCount, data);
+
+        vista.dtmEntrenadores.setDataVector(data, columnNames);
+
+        return vista.dtmEntrenadores;
+
+    }
+
+    private DefaultTableModel construirTableModelClientes(ResultSet rs) throws SQLException {
+
+        ResultSetMetaData metaData = rs.getMetaData();
+
+        Vector<String> columnNames = new java.util.Vector<String>();
+        int columnCount = metaData.getColumnCount();
+        for (int column = 1; column <= columnCount; column++) {
+            columnNames.add(metaData.getColumnName(column));
+        }
+
         Vector<Vector<Object>> data = new Vector<Vector<Object>>();
         setDataVector(rs, columnCount, data);
 
@@ -464,6 +647,24 @@ public class Controlador implements ActionListener, ItemListener, ListSelectionL
         return vista.dtmClientes;
 
 
+    }
+
+    private DefaultTableModel construirTableModelClases(ResultSet rs) throws SQLException {
+
+        ResultSetMetaData metaData = rs.getMetaData();
+
+        Vector<String> columnNames = new java.util.Vector<String>();
+        int columnCount = metaData.getColumnCount();
+        for (int column = 1; column <= columnCount; column++) {
+            columnNames.add(metaData.getColumnName(column));
+        }
+
+        Vector<Vector<Object>> data = new Vector<Vector<Object>>();
+        setDataVector(rs, columnCount, data);
+
+        vista.dtmClases.setDataVector(data, columnNames);
+
+        return vista.dtmClases;
     }
 
     private void setDataVector(ResultSet rs, int columnCount, Vector<Vector<Object>> data) throws SQLException {

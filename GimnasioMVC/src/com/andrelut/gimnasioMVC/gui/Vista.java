@@ -1,21 +1,16 @@
 package com.andrelut.gimnasioMVC.gui;
 
-import com.andrelut.gimnasioMVC.enums.EstadoPago;
-import com.andrelut.gimnasioMVC.enums.TipoSuscripcion;
+import com.andrelut.gimnasioMVC.enums.*;
 import com.github.lgooddatepicker.components.DatePicker;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableColumn;
 import java.awt.*;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 
 public class Vista extends JFrame {
     private static final String TITULOFRAME = "Gimnasio";
 
-    public JTabbedPane tabbedPane1;
+    public JTabbedPane tabbedPanedGimnasio;
     public JPanel panel1;
     public JPanel JPanelClientes;
     public JPanel JPanelSuscripciones;
@@ -54,6 +49,36 @@ public class Vista extends JFrame {
     public JPasswordField adminPassword;
     public JDialog adminPasswordDialog;
     public JTable suscripcionesTabla;
+    public JComboBox comboTiposClases;
+    public JTextField txtAforoMaximo;
+    public JTextField txtDuracionClase;
+    public JComboBox comboEntrenadorClase;
+    public JTextField txtNombreEntrenador;
+    public DatePicker fechaContratacion;
+    public JTextField txtSalario;
+    public JTable entrenadoresTabla;
+    public JButton btnAddEntrenador;
+    public JButton btnModificarEntrenador;
+    public JButton btnEliminarEntrenador;
+    public JComboBox comboEspecialidadEntrenador;
+    public JTextField txtInstructorAsignado;
+    public JButton btnAddClase;
+    public JButton modificarButton;
+    public JButton eliminarButton;
+    public JTable clasesTabla;
+    public JComboBox comboEquipamiento;
+    public JTextField txtMaterialUtilizado;
+    public JTextField txtMarcaEquipamiento;
+    public DatePicker fechaCompraEquipamiento;
+    public JTextField txtCostoEquipamiento;
+    public JComboBox comboEstadoEquipamiento;
+    public JButton btnAddEquipamiento;
+    public JTable equipamientoTabla;
+    private JButton btnEliminarEquipamiento;
+    private JButton btnModificarEquipamiento;
+    public DefaultTableModel dtmEquipamiento;
+    public DefaultTableModel dtmEntrenadores;
+    public DefaultTableModel dtmClases;
 
 
     public Vista() {
@@ -63,7 +88,7 @@ public class Vista extends JFrame {
 
     public void initFrame() {
         panel1.setLayout(new BorderLayout());
-        panel1.add(tabbedPane1, BorderLayout.CENTER);
+        panel1.add(tabbedPanedGimnasio, BorderLayout.CENTER);
         this.setContentPane(panel1);
         this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         this.pack();
@@ -121,6 +146,12 @@ public class Vista extends JFrame {
         this.clientesTabla.setModel(dtmClientes);
         this.dtmSuscripciones = new DefaultTableModel();
         this.suscripcionesTabla.setModel(dtmSuscripciones);
+        this.dtmEntrenadores = new DefaultTableModel();
+        this.entrenadoresTabla.setModel(dtmEntrenadores);
+        this.dtmClases = new DefaultTableModel();
+        this.clasesTabla.setModel(dtmClases);
+        this.dtmEquipamiento = new DefaultTableModel();
+        this.equipamientoTabla.setModel(dtmEquipamiento);
 
 
     }
@@ -136,6 +167,27 @@ public class Vista extends JFrame {
             comboPagado.addItem(estado.getValor());
         }
         comboPagado.setSelectedIndex(-1);
+
+        for (TipoClase tipo : TipoClase.values()) {
+            comboTiposClases.addItem(tipo.getNombre());
+        }
+        comboTiposClases.setSelectedIndex(-1);
+
+        for (TipoClase tipo : TipoClase.values()) {
+            comboEspecialidadEntrenador.addItem(tipo.getNombre());
+        }
+        comboEspecialidadEntrenador.setSelectedIndex(-1);
+
+        for (TipoEquipamiento tipo : TipoEquipamiento.values()) {
+            comboEquipamiento.addItem(tipo.getDescripcion());
+        }
+        comboEquipamiento.setSelectedIndex(-1);
+
+        for (EstadoEquipamiento estado : EstadoEquipamiento.values()) {
+            comboEstadoEquipamiento.addItem(estado.getValor());
+        }
+        comboEstadoEquipamiento.setSelectedIndex(-1);
+
     }
 
 
